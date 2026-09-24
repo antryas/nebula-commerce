@@ -28,7 +28,7 @@ import { NAV_ITEMS } from './nav-items';
     '(keydown.escape)': 'closeDrawer.emit()',
   },
   template: `
-    <div class="nb-sidebar__inner" [cdkTrapFocus]="open()" [cdkTrapFocusAutoCapture]="true">
+    <div class="nb-sidebar__inner" [cdkTrapFocus]="open()" [cdkTrapFocusAutoCapture]="open()">
       <div class="nb-sidebar__brand">
         <a routerLink="/overview" class="nb-brand" aria-label="Nebula Commerce home">
           <span class="nb-brand-mark" aria-hidden="true">N</span>
