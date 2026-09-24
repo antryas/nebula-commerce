@@ -1,0 +1,154 @@
+<nb-page-header
+  title="Fulfillment"
+  subtitle="Drag orders forward through the pipeline, or use the arrow on a card."
+>
+  @if (!store.loading() && !store.error()) {
+    <p class="summary">
+      <span class="summary__dot" aria-hidden="true"></span>
+      <span class="summary__value">{{ openCount() }}</span> open orders ·
+      <span class="summary__value">{{ openValue() | compactCurrency }}</span> in pipeline
+    </p>
+  }
+</nb-page-header>
+
+@if (store.error(); as error) {
+  <nb-glass-card [padded]="false">
+    <nb-error-state title="Couldn't load the board" [error]="error" (retry)="store.load()" />
+  </nb-glass-card>
+} @else {
+  @if (store.loading()) {
+    <span class="sr-only" role="status">Loading fulfillment board…</span>
+  }
+  <div
+    class="board"
+    cdkDropListGroup
+    cdkScrollable
+    [class.is-dragging]="dragSource() !== null"
+    [attr.aria-busy]="store.loading()"
+  >
+    @for (col of columns(); track col.status) {
+      <nb-gradient-border
+        class="frame"
+        [active]="dropTarget() === col.status"
+        [style.--nb-col]="col.meta.color"
+      >
+        <section
+          class="column"
+          [class.is-locked]="isLocked(col.status)"
+          [class.is-target]="dropTarget() === col.status"
+          [attr.aria-labelledby]="'nb-col-' + col.status"
+        >
+          <header class="column__head">
+            <span class="column__icon material-symbols-rounded" aria-hidden="true">
+              {{ col.meta.icon }}
+            </span>
+            <h2 class="column__title" [id]="'nb-col-' + col.status">{{ col.meta.label }}</h2>
+            <span class="column__count" [attr.aria-label]="col.orders.length + ' orders'">
+              {{ store.loading() ? '–' : col.orders.length }}
+            </span>
+            <span
+              class="column__total"
+              [attr.aria-label]="'Total ' + (col.total | currency: 'USD')"
+            >
+              {{ store.loading() ? '' : (col.total | compactCurrency) }}
+            </span>
+          </header>
+
+          @if (store.loading()) {
+            <div class="column__list" aria-hidden="true">
+              @for (i of placeholderCards; track i) {
+                <div class="ghost">
+                  <span class="ghost__bar nb-shimmer" style="width: 40%"></span>
+                  <span class="ghost__bar nb-shimmer" style="width: 75%"></span>
+                  <span class="ghost__bar nb-shimmer" style="width: 55%"></span>
+                </div>
+              }
+            </div>
+          } @else {
+            <div
+              class="column__list"
+              role="list"
+              [attr.aria-label]="col.meta.label + ' orders'"
+              cdkDropList
+              [cdkDropListData]="col.status"
+              (cdkDropListEntered)="onEntered(col.status)"
+              (cdkDropListExited)="onExited(col.status)"
+              (cdkDropListDropped)="drop($event)"
+            >
+              @for (order of col.orders; track order.id) {
+                <article
+                  class="card"
+                  role="listitem"
+                  tabindex="-1"
+                  cdkDrag
+                  [cdkDragData]="order"
+                  [cdkDragStartDelay]="dragDelay"
+                  [cdkDragDisabled]="!col.next || store.pending().has(order.id)"
+                  [class.is-final]="!col.next"
+                  [class.is-fresh]="store.fresh().has(order.id)"
+                  [class.is-pending]="store.pending().has(order.id)"
+                  [attr.data-order-id]="order.id"
+                  [attr.aria-busy]="store.pending().has(order.id) || null"
+                  [style.--nb-card-status]="col.meta.color"
+                  (cdkDragStarted)="onDragStarted(col.status)"
+                  (cdkDragEnded)="onDragEnded()"
+                >
+                  <div class="card__inner">
+                    <div class="card__row">
+                      <span class="card__number">#{{ order.number }}</span>
+                      <time class="card__time" [attr.datetime]="order.createdAt">
+                        {{ order.createdAt | relativeTime }}
+                      </time>
+                    </div>
+                    <div class="card__customer">
+                      <nb-avatar
+                        [src]="order.customerAvatarUrl"
+                        [name]="order.customerName"
+                        size="24"
+                      />
+                      <span class="card__name">{{ order.customerName }}</span>
+                    </div>
+                    <div class="card__foot">
+                      <span class="card__items">
+                        <span class="material-symbols-rounded" aria-hidden="true"
+                          >shopping_bag</span
+                        >
+                        {{ itemCount(order) }} {{ itemCount(order) === 1 ? 'item' : 'items' }}
+                      </span>
+                      <span class="card__total">{{ order.total | currency: 'USD' }}</span>
+                      @if (col.next; as next) {
+                        <button
+                          type="button"
+                          class="card__advance"
+                          [attr.aria-disabled]="store.pending().has(order.id) || null"
+                          [attr.aria-label]="'Move order #' + order.number + ' to ' + next"
+                          [title]="'Move to ' + next"
+                          (click)="advance(order)"
+                        >
+                          <span class="material-symbols-rounded" aria-hidden="true">
+                            {{
+                              store.pending().has(order.id) ? 'progress_activity' : 'arrow_forward'
+                            }}
+                          </span>
+                        </button>
+                      } @else {
+                        <span class="card__done material-symbols-rounded" aria-hidden="true">
+                          check_circle
+                        </span>
+                      }
+                    </div>
+                  </div>
+                </article>
+              } @empty {
+                <p class="column__empty">
+                  <span class="material-symbols-rounded" aria-hidden="true">move_to_inbox</span>
+                  Drop orders here
+                </p>
+              }
+            </div>
+          }
+        </section>
+      </nb-gradient-border>
+    }
+  </div>
+}
