@@ -1,0 +1,252 @@
+@use 'products-ui' as ui;
+
+@include ui.buttons;
+@include ui.controls;
+@include ui.segmented;
+@include ui.dot;
+
+:host {
+  display: block;
+}
+
+.nb-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  padding: 0.875rem;
+}
+
+.nb-search {
+  position: relative;
+  flex: 1 1 16rem;
+
+  > .material-symbols-rounded {
+    position: absolute;
+    top: 50%;
+    left: 0.75rem;
+    width: 1.25rem;
+    overflow: hidden;
+    font-size: 1.25rem;
+    color: var(--nb-muted);
+    transform: translateY(-50%);
+    pointer-events: none;
+  }
+
+  .nb-control {
+    padding-left: 2.5rem;
+  }
+}
+
+.nb-filters__select {
+  flex: 0 1 12rem;
+}
+
+[data-level='in'] {
+  --nb-dot: var(--nb-success);
+}
+
+[data-level='low'] {
+  --nb-dot: var(--nb-warning);
+}
+
+[data-level='out'] {
+  --nb-dot: var(--nb-danger);
+}
+
+.nb-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 1.25rem;
+}
+
+.nb-results {
+  transition: opacity 200ms ease;
+}
+
+.nb-results--busy {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.nb-card-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-bottom: 1rem;
+  overflow: hidden;
+  border: 1px solid var(--nb-glass-border);
+  border-radius: 1.125rem;
+  background: var(--nb-glass-bg);
+}
+
+.nb-card-skeleton__media {
+  aspect-ratio: 1;
+}
+
+.nb-card-skeleton__line {
+  height: 0.875rem;
+  margin: 0 1rem;
+  border-radius: 0.5rem;
+}
+
+.nb-card-skeleton__line--short {
+  width: 45%;
+}
+
+.nb-table-scroll {
+  overflow-x: auto;
+}
+
+.nb-table {
+  width: 100%;
+  min-width: 52rem;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+
+  th {
+    position: sticky;
+    top: 0;
+    padding: 0.875rem 1rem;
+    border-bottom: 1px solid var(--nb-border);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-align: left;
+    text-transform: uppercase;
+    color: var(--nb-muted);
+    background: var(--nb-glass-bg);
+  }
+
+  td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--nb-border) 60%, transparent);
+    vertical-align: middle;
+  }
+
+  tbody tr {
+    transition: background-color 150ms ease;
+
+    &:hover {
+      background: color-mix(in srgb, var(--nb-accent-1) 6%, transparent);
+    }
+
+    &:last-child td {
+      border-bottom: 0;
+    }
+  }
+
+  s {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--nb-muted);
+  }
+}
+
+.nb-num {
+  font-variant-numeric: tabular-nums;
+  text-align: right !important;
+}
+
+.nb-table__product {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: inherit;
+  text-decoration: none;
+
+  img {
+    flex: none;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 0.75rem;
+    object-fit: cover;
+    background: var(--nb-surface);
+  }
+
+  > span {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  &:hover .nb-table__name {
+    color: var(--nb-accent-1);
+  }
+
+  &:focus-visible {
+    border-radius: 0.75rem;
+    outline: 2px solid var(--nb-accent-2);
+    outline-offset: 4px;
+  }
+}
+
+.nb-table__name {
+  font-weight: 600;
+  transition: color 150ms ease;
+}
+
+.nb-table__sku {
+  font-size: 0.75rem;
+  color: var(--nb-muted);
+}
+
+.nb-table__cat {
+  padding: 0.1875rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--nb-accent-1) 70%, var(--nb-text));
+  background: color-mix(in srgb, var(--nb-accent-1) 12%, transparent);
+}
+
+.nb-level {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.nb-table__actions {
+  white-space: nowrap;
+  text-align: right;
+
+  .nb-icon-btn {
+    display: inline-grid;
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+}
+
+.nb-icon-btn--danger:hover {
+  color: var(--nb-danger);
+  background: color-mix(in srgb, var(--nb-danger) 10%, transparent);
+}
+
+.nb-paginator {
+  margin-top: 1.25rem;
+  border-radius: 1rem;
+  background: transparent;
+}
+
+@media (max-width: 639.98px) {
+  .nb-filters__select {
+    flex: 1 1 calc(50% - 0.375rem);
+  }
+
+  .nb-filters__stock {
+    display: flex;
+    width: 100%;
+
+    button {
+      flex: 1;
+      padding: 0 0.375rem;
+    }
+  }
+
+  .nb-grid {
+    grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+    gap: 0.75rem;
+  }
+}

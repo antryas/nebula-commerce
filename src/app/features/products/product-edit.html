@@ -1,0 +1,337 @@
+<nb-page-header
+  [title]="isNew() ? 'New product' : 'Edit product'"
+  [subtitle]="
+    isNew() ? 'Add an item to your Nebula catalog' : preview().name + ' · ' + preview().sku
+  "
+>
+  <a class="nb-btn nb-btn--ghost" routerLink="/products">
+    <span class="material-symbols-rounded" aria-hidden="true">arrow_back</span>
+    Back to products
+  </a>
+</nb-page-header>
+
+@switch (state()) {
+  @case ('loading') {
+    <div class="nb-editor">
+      <nb-glass-card class="nb-editor__main"
+        ><nb-skeleton [rows]="8" [height]="20"
+      /></nb-glass-card>
+      <nb-glass-card class="nb-editor__side"
+        ><nb-skeleton [rows]="5" [height]="20"
+      /></nb-glass-card>
+    </div>
+  }
+  @case ('error') {
+    <nb-glass-card [padded]="false">
+      @if (loadError()?.status === 404) {
+        <nb-empty-state
+          icon="inventory_2"
+          title="Product not found"
+          message="It may have been deleted, or the link is wrong."
+        >
+          <a class="nb-btn" routerLink="/products">Back to products</a>
+        </nb-empty-state>
+      } @else {
+        <nb-error-state title="Couldn't load product" [error]="loadError()" (retry)="retry()" />
+      }
+    </nb-glass-card>
+  }
+  @default {
+    <form class="nb-editor" [formGroup]="form" (ngSubmit)="save()" novalidate>
+      <div class="nb-editor__main">
+        <nb-glass-card class="nb-section">
+          <header class="nb-section__head">
+            <span class="nb-section__icon material-symbols-rounded" aria-hidden="true">info</span>
+            <div>
+              <h2>General</h2>
+              <p>Name, SKU and the story customers read.</p>
+            </div>
+          </header>
+
+          <div class="nb-field">
+            <div class="nb-field__label">
+              <label for="product-name">Name</label>
+              <span class="nb-counter" [class.nb-counter--over]="nameLength() > nameMax"
+                >{{ nameLength() }}/{{ nameMax }}</span
+              >
+            </div>
+            <input
+              id="product-name"
+              class="nb-control"
+              formControlName="name"
+              placeholder="e.g. Aurora Knit Hoodie"
+              autocomplete="off"
+              [attr.aria-invalid]="!!err(controls.name)"
+              [attr.aria-describedby]="err(controls.name) ? 'product-name-error' : null"
+            />
+            @if (err(controls.name); as message) {
+              <p id="product-name-error" class="nb-field__error">{{ message }}</p>
+            }
+          </div>
+
+          <div class="nb-field">
+            <div class="nb-field__label"><label for="product-sku">SKU</label></div>
+            <input
+              id="product-sku"
+              class="nb-control nb-control--mono"
+              formControlName="sku"
+              placeholder="NB-1001"
+              autocomplete="off"
+              spellcheck="false"
+              (input)="normalizeSku()"
+              [attr.aria-invalid]="!!err(controls.sku)"
+              aria-describedby="product-sku-hint"
+            />
+            @if (err(controls.sku); as message) {
+              <p id="product-sku-hint" class="nb-field__error">{{ message }}</p>
+            } @else {
+              <p id="product-sku-hint" class="nb-field__hint">
+                Uppercase letters, digits and dashes, 4–20 characters.
+              </p>
+            }
+          </div>
+
+          <div class="nb-field">
+            <div class="nb-field__label">
+              <label for="product-description">Description</label>
+              <span
+                class="nb-counter"
+                [class.nb-counter--over]="descriptionLength() > descriptionMax"
+                >{{ descriptionLength() }}/{{ descriptionMax }}</span
+              >
+            </div>
+            <textarea
+              id="product-description"
+              class="nb-control nb-control--area"
+              formControlName="description"
+              rows="5"
+              placeholder="Materials, fit, care instructions…"
+              [attr.aria-invalid]="!!err(controls.description)"
+            ></textarea>
+            @if (err(controls.description); as message) {
+              <p class="nb-field__error">{{ message }}</p>
+            }
+          </div>
+        </nb-glass-card>
+
+        <nb-glass-card class="nb-section">
+          <header class="nb-section__head">
+            <span class="nb-section__icon material-symbols-rounded" aria-hidden="true">sell</span>
+            <div>
+              <h2>Pricing</h2>
+              <p>Set a compare-at price to show a sale badge.</p>
+            </div>
+          </header>
+          <div class="nb-row">
+            <div class="nb-field">
+              <div class="nb-field__label"><label for="product-price">Price</label></div>
+              <div class="nb-affix">
+                <span aria-hidden="true">$</span>
+                <input
+                  id="product-price"
+                  class="nb-control"
+                  type="number"
+                  inputmode="decimal"
+                  min="0"
+                  step="0.01"
+                  formControlName="price"
+                  placeholder="0.00"
+                  [attr.aria-invalid]="!!err(controls.price)"
+                />
+              </div>
+              @if (err(controls.price); as message) {
+                <p class="nb-field__error">{{ message }}</p>
+              }
+            </div>
+            <div class="nb-field">
+              <div class="nb-field__label">
+                <label for="product-compare">Compare-at price</label>
+                <span class="nb-optional">Optional</span>
+              </div>
+              <div class="nb-affix">
+                <span aria-hidden="true">$</span>
+                <input
+                  id="product-compare"
+                  class="nb-control"
+                  type="number"
+                  inputmode="decimal"
+                  min="0"
+                  step="0.01"
+                  formControlName="compareAtPrice"
+                  placeholder="0.00"
+                  [attr.aria-invalid]="!!(err(controls.compareAtPrice) || compareAtError())"
+                />
+              </div>
+              @if (err(controls.compareAtPrice) || compareAtError(); as message) {
+                <p class="nb-field__error">{{ message }}</p>
+              }
+            </div>
+          </div>
+          @if (savings(); as s) {
+            <p class="nb-savings">
+              <span class="material-symbols-rounded" aria-hidden="true">local_offer</span>
+              Customers save {{ s.amount | currency: 'USD' }} ({{ s.pct }}% off)
+            </p>
+          }
+        </nb-glass-card>
+
+        <nb-glass-card class="nb-section">
+          <header class="nb-section__head">
+            <span class="nb-section__icon material-symbols-rounded" aria-hidden="true"
+              >inventory_2</span
+            >
+            <div>
+              <h2>Inventory &amp; variants</h2>
+              <p>Stock is summed from variants when you add any.</p>
+            </div>
+          </header>
+
+          <div class="nb-field nb-field--stock">
+            <div class="nb-field__label"><label for="product-stock">Stock</label></div>
+            <input
+              id="product-stock"
+              class="nb-control"
+              type="number"
+              inputmode="numeric"
+              min="0"
+              step="1"
+              formControlName="stock"
+              [attr.aria-invalid]="!!err(controls.stock)"
+            />
+            @if (err(controls.stock); as message) {
+              <p class="nb-field__error">{{ message }}</p>
+            } @else if (controls.variants.length) {
+              <p class="nb-field__hint">Calculated from {{ controls.variants.length }} variants.</p>
+            }
+          </div>
+
+          <div class="nb-variants" formArrayName="variants">
+            <div class="nb-variants__head">
+              <h3>Variants</h3>
+              <button type="button" class="nb-btn" (click)="addVariant()">
+                <span class="material-symbols-rounded" aria-hidden="true">add</span>
+                Add variant
+              </button>
+            </div>
+            @for (v of controls.variants.controls; track v; let i = $index) {
+              <div
+                class="nb-variant"
+                [formGroupName]="i"
+                animate.enter="nb-variant-in"
+                animate.leave="nb-variant-out"
+              >
+                <label class="nb-variant__cell">
+                  <span class="nb-variant__label">Size</span>
+                  <input
+                    class="nb-control"
+                    formControlName="size"
+                    placeholder="M"
+                    data-first
+                    [attr.aria-invalid]="!!err(v.controls.size)"
+                  />
+                </label>
+                <label class="nb-variant__cell">
+                  <span class="nb-variant__label">Color</span>
+                  <input
+                    class="nb-control"
+                    formControlName="color"
+                    placeholder="Black"
+                    [attr.aria-invalid]="!!err(v.controls.color)"
+                  />
+                </label>
+                <label class="nb-variant__cell nb-variant__cell--stock">
+                  <span class="nb-variant__label">Stock</span>
+                  <input
+                    class="nb-control"
+                    type="number"
+                    min="0"
+                    step="1"
+                    formControlName="stock"
+                    [attr.aria-invalid]="!!err(v.controls.stock)"
+                  />
+                </label>
+                <button
+                  type="button"
+                  class="nb-icon-btn nb-variant__remove"
+                  [attr.aria-label]="'Remove variant ' + (i + 1)"
+                  (click)="removeVariant(i)"
+                >
+                  <span class="material-symbols-rounded" aria-hidden="true">close</span>
+                </button>
+              </div>
+            } @empty {
+              <p class="nb-variants__empty">
+                No variants. Add sizes or colors to track stock per option.
+              </p>
+            }
+          </div>
+        </nb-glass-card>
+      </div>
+
+      <aside class="nb-editor__side">
+        <nb-glass-card class="nb-section">
+          <h2 class="nb-section__title">Image</h2>
+          <nb-image-drop
+            [url]="preview().imageUrl"
+            [alt]="preview().name"
+            (picked)="onImage($event)"
+            (cleared)="clearImage()"
+          />
+        </nb-glass-card>
+
+        <nb-glass-card class="nb-section">
+          <h2 class="nb-section__title">Status &amp; category</h2>
+          <div class="nb-status">
+            <div>
+              <p class="nb-status__name">
+                <span
+                  class="nb-dot"
+                  [class.nb-dot--off]="!preview().active"
+                  aria-hidden="true"
+                ></span>
+                {{ preview().active ? 'Active' : 'Draft' }}
+              </p>
+              <p class="nb-status__hint">
+                {{ preview().active ? 'Visible in your storefront.' : 'Hidden from customers.' }}
+              </p>
+            </div>
+            <mat-slide-toggle formControlName="active" aria-label="Product is active" />
+          </div>
+          <div class="nb-field">
+            <div class="nb-field__label"><label for="product-category">Category</label></div>
+            <select
+              id="product-category"
+              class="nb-control"
+              formControlName="category"
+              [attr.aria-invalid]="!!err(controls.category)"
+            >
+              <option value="" disabled>Choose a category</option>
+              @for (c of categories; track c) {
+                <option [value]="c">{{ c }}</option>
+              }
+            </select>
+            @if (err(controls.category); as message) {
+              <p class="nb-field__error">{{ message }}</p>
+            }
+          </div>
+        </nb-glass-card>
+
+        <section class="nb-preview" aria-label="Live preview">
+          <h2 class="nb-section__title">
+            <span class="nb-live" aria-hidden="true"></span>
+            Live preview
+          </h2>
+          <nb-product-card [product]="preview()" />
+        </section>
+      </aside>
+
+      <nb-save-bar
+        [dirty]="dirty()"
+        [pending]="pending()"
+        [canSave]="canSave()"
+        [idleText]="isNew() ? 'Start by naming your product' : 'All changes saved'"
+        (discard)="discard()"
+      />
+    </form>
+  }
+}

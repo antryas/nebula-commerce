@@ -1,0 +1,101 @@
+<article class="nb-pcard" [class.nb-pcard--draft]="!product().active">
+  <div class="nb-pcard__media">
+    @if (product().imageUrl && !imageFailed()) {
+      <img
+        [src]="product().imageUrl"
+        [alt]="product().name"
+        width="400"
+        height="400"
+        loading="lazy"
+        decoding="async"
+        (error)="imageFailed.set(true)"
+      />
+    } @else {
+      <span class="nb-pcard__placeholder" aria-hidden="true">
+        <span class="material-symbols-rounded">image</span>
+      </span>
+    }
+
+    <div class="nb-pcard__badges">
+      @if (product().category) {
+        <span class="nb-pcard__tag">{{ product().category }}</span>
+      }
+      @if (discount()) {
+        <span class="nb-pcard__tag nb-pcard__tag--sale">−{{ discount() }}%</span>
+      }
+      @if (!product().active) {
+        <span class="nb-pcard__tag nb-pcard__tag--draft">Draft</span>
+      }
+    </div>
+
+    @if (actions()) {
+      <button
+        type="button"
+        class="nb-pcard__menu"
+        [matMenuTriggerFor]="menu"
+        [attr.aria-label]="'Actions for ' + product().name"
+      >
+        <span class="material-symbols-rounded" aria-hidden="true">more_horiz</span>
+      </button>
+      <mat-menu #menu="matMenu" xPosition="before">
+        <button mat-menu-item type="button" class="nb-menu-item" (click)="edit.emit()">
+          <span class="material-symbols-rounded" aria-hidden="true">edit</span>
+          Edit
+        </button>
+        <button
+          mat-menu-item
+          type="button"
+          class="nb-menu-item nb-menu-danger"
+          (click)="delete.emit()"
+        >
+          <span class="material-symbols-rounded" aria-hidden="true">delete</span>
+          Delete
+        </button>
+      </mat-menu>
+    }
+  </div>
+
+  <div class="nb-pcard__body">
+    <h3 class="nb-pcard__name">
+      @if (link(); as l) {
+        <a class="nb-pcard__link" [routerLink]="l">{{ product().name }}</a>
+      } @else {
+        {{ product().name }}
+      }
+    </h3>
+    <p class="nb-pcard__sku">{{ product().sku }}</p>
+
+    <div class="nb-pcard__row">
+      <p class="nb-pcard__price">
+        <span>{{ product().price | currency: 'USD' }}</span>
+        @if (discount()) {
+          <s>{{ product().compareAtPrice | currency: 'USD' }}</s>
+        }
+      </p>
+      @if (product().rating > 0) {
+        <span
+          class="nb-stars"
+          role="img"
+          [attr.aria-label]="'Rated ' + product().rating + ' out of 5'"
+        >
+          <span class="nb-stars__base" aria-hidden="true">★★★★★</span>
+          <span class="nb-stars__fill" aria-hidden="true" [style.width.%]="ratingPct()">★★★★★</span>
+        </span>
+      } @else {
+        <span class="nb-pcard__new">No reviews yet</span>
+      }
+    </div>
+
+    <div class="nb-stock" [attr.data-level]="level()">
+      <div class="nb-stock__meta">
+        <span class="nb-stock__label">{{ stockText() }}</span>
+        <span class="nb-stock__units"
+          >{{ product().stock }} {{ product().stock === 1 ? 'unit' : 'units' }}</span
+        >
+      </div>
+      <div class="nb-stock__track" aria-hidden="true">
+        <span class="nb-stock__fill" [style.width.%]="stockPct()"></span>
+      </div>
+    </div>
+  </div>
+</article>

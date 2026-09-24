@@ -1,0 +1,218 @@
+<nb-page-header title="Products" [subtitle]="subtitle()">
+  <div class="nb-segmented" role="group" aria-label="View mode">
+    <button
+      type="button"
+      aria-label="Grid view"
+      title="Grid view"
+      [attr.aria-pressed]="store.view() === 'grid'"
+      (click)="setView('grid')"
+    >
+      <span class="material-symbols-rounded" aria-hidden="true">grid_view</span>
+    </button>
+    <button
+      type="button"
+      aria-label="Table view"
+      title="Table view"
+      [attr.aria-pressed]="store.view() === 'table'"
+      (click)="setView('table')"
+    >
+      <span class="material-symbols-rounded" aria-hidden="true">table_rows</span>
+    </button>
+  </div>
+  <a class="nb-btn nb-btn--primary" routerLink="/products/new">
+    <span class="material-symbols-rounded" aria-hidden="true">add</span>
+    New product
+  </a>
+</nb-page-header>
+
+<nb-glass-card class="nb-filters">
+  <label class="nb-search">
+    <span class="material-symbols-rounded" aria-hidden="true">search</span>
+    <span class="sr-only">Search products</span>
+    <input
+      class="nb-control"
+      type="search"
+      placeholder="Search by name or SKU…"
+      autocomplete="off"
+      [value]="store.search()"
+      (input)="onSearch($event)"
+    />
+  </label>
+
+  <label class="nb-filters__select">
+    <span class="sr-only">Category</span>
+    <select class="nb-control" (change)="onCategory($event)">
+      <option value="" [selected]="!store.query().category">All categories</option>
+      @for (c of categories; track c) {
+        <option [value]="c" [selected]="store.query().category === c">{{ c }}</option>
+      }
+    </select>
+  </label>
+
+  <label class="nb-filters__select">
+    <span class="sr-only">Sort by</span>
+    <select class="nb-control" (change)="onSort($event)">
+      @for (o of sortOptions; track o.value) {
+        <option [value]="o.value" [selected]="sortValue() === o.value">{{ o.label }}</option>
+      }
+    </select>
+  </label>
+
+  <div class="nb-segmented nb-filters__stock" role="group" aria-label="Stock level">
+    @for (s of stockFilters; track s.value) {
+      <button
+        type="button"
+        [attr.data-stock]="s.value"
+        [attr.aria-pressed]="store.query().stock === s.value"
+        (click)="store.setStock(s.value)"
+      >
+        @if (s.value !== 'all') {
+          <span class="nb-dot" [attr.data-level]="s.value" aria-hidden="true"></span>
+        }
+        {{ s.label }}
+      </button>
+    }
+  </div>
+</nb-glass-card>
+
+@if (store.error(); as error) {
+  <nb-glass-card [padded]="false">
+    <nb-error-state title="Couldn't load products" [error]="error" (retry)="store.reload()" />
+  </nb-glass-card>
+} @else if (!store.result()) {
+  <div class="nb-grid" role="status" aria-label="Loading products">
+    @for (i of skeletons; track i) {
+      <div class="nb-card-skeleton" aria-hidden="true">
+        <div class="nb-card-skeleton__media nb-shimmer"></div>
+        <div class="nb-card-skeleton__line nb-shimmer"></div>
+        <div class="nb-card-skeleton__line nb-card-skeleton__line--short nb-shimmer"></div>
+      </div>
+    }
+  </div>
+} @else if (store.result()!.items.length === 0) {
+  <nb-glass-card [padded]="false">
+    @if (store.hasFilters()) {
+      <nb-empty-state
+        icon="search_off"
+        title="No products match"
+        message="Try a different search term or clear the filters."
+      >
+        <button type="button" class="nb-btn" (click)="store.clearFilters()">Clear filters</button>
+      </nb-empty-state>
+    } @else {
+      <nb-empty-state
+        icon="inventory_2"
+        title="Your catalog is empty"
+        message="Add your first product to start selling."
+      >
+        <a class="nb-btn nb-btn--primary" routerLink="/products/new">New product</a>
+      </nb-empty-state>
+    }
+  </nb-glass-card>
+} @else {
+  @let page = store.result()!;
+  <div
+    class="nb-results"
+    [class.nb-results--busy]="store.loading()"
+    [attr.aria-busy]="store.loading()"
+  >
+    @if (store.view() === 'grid') {
+      <div class="nb-grid">
+        @for (p of page.items; track p.id) {
+          <nb-product-card
+            [nbStagger]="$index"
+            [product]="p"
+            [link]="['/products', p.id, 'edit']"
+            actions
+            (edit)="edit(p)"
+            (delete)="remove(p)"
+          />
+        }
+      </div>
+    } @else {
+      <nb-glass-card [padded]="false" class="nb-table-card">
+        <div class="nb-table-scroll">
+          <table class="nb-table">
+            <thead>
+              <tr>
+                <th scope="col">Product</th>
+                <th scope="col">Category</th>
+                <th scope="col" class="nb-num">Price</th>
+                <th scope="col">Stock</th>
+                <th scope="col" class="nb-num">Sold</th>
+                <th scope="col">Active</th>
+                <th scope="col"><span class="sr-only">Actions</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (p of page.items; track p.id) {
+                <tr>
+                  <td>
+                    <a class="nb-table__product" [routerLink]="['/products', p.id, 'edit']">
+                      <img [src]="p.imageUrl" alt="" width="44" height="44" loading="lazy" />
+                      <span>
+                        <span class="nb-table__name">{{ p.name }}</span>
+                        <span class="nb-table__sku">{{ p.sku }}</span>
+                      </span>
+                    </a>
+                  </td>
+                  <td>
+                    <span class="nb-table__cat">{{ p.category }}</span>
+                  </td>
+                  <td class="nb-num">
+                    {{ p.price | currency: 'USD' }}
+                    @if (p.compareAtPrice) {
+                      <s>{{ p.compareAtPrice | currency: 'USD' }}</s>
+                    }
+                  </td>
+                  <td>
+                    <span class="nb-level" [attr.data-level]="stockLevel(p.stock)">
+                      <span class="nb-dot" aria-hidden="true"></span>
+                      {{ p.stock === 0 ? stockLabel(p.stock) : (p.stock | number) }}
+                    </span>
+                  </td>
+                  <td class="nb-num">{{ p.sold | number }}</td>
+                  <td>
+                    <mat-slide-toggle
+                      [checked]="p.active"
+                      [aria-label]="'Active: ' + p.name"
+                      (change)="toggleActive(p, $event.checked)"
+                    />
+                  </td>
+                  <td class="nb-table__actions">
+                    <button
+                      type="button"
+                      class="nb-icon-btn"
+                      [attr.aria-label]="'Edit ' + p.name"
+                      (click)="edit(p)"
+                    >
+                      <span class="material-symbols-rounded" aria-hidden="true">edit</span>
+                    </button>
+                    <button
+                      type="button"
+                      class="nb-icon-btn nb-icon-btn--danger"
+                      [attr.aria-label]="'Delete ' + p.name"
+                      (click)="remove(p)"
+                    >
+                      <span class="material-symbols-rounded" aria-hidden="true">delete</span>
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </nb-glass-card>
+    }
+
+    <mat-paginator
+      class="nb-paginator"
+      [length]="page.total"
+      [pageIndex]="page.page - 1"
+      [pageSize]="page.pageSize"
+      [pageSizeOptions]="[12, 24, 48]"
+      aria-label="Products pages"
+      (page)="onPage($event)"
+    />
+  </div>
+}
