@@ -333,6 +333,80 @@ const CUSTOMER_NOTES = [
 
 const CARRIERS = ['DHL Express', 'UPS', 'FedEx', 'USPS', 'Royal Mail', 'DPD'];
 
+/**
+ * Hand-picked Lorem Picsum photo ids that loosely match each product noun, so the catalog
+ * reads like a store instead of random landscapes (and no two products share a photo).
+ */
+const PRODUCT_PHOTOS: Record<string, number> = {
+  'Linen Shirt': 325,
+  'Merino Sweater': 755,
+  'Denim Jacket': 1059,
+  'Organic Cotton Tee': 535,
+  'Slim Chino Pants': 604,
+  'Fleece Hoodie': 375,
+  'Puffer Vest': 669,
+  'Oxford Shirt': 856,
+  'Knit Cardigan': 758,
+  'Rain Shell Jacket': 338,
+  'Runner Sneakers': 817,
+  'Leather Chelsea Boots': 858,
+  'Canvas Low-Tops': 103,
+  'Trail Running Shoes': 177,
+  'Suede Loafers': 21,
+  'Recovery Slides': 156,
+  'High-Top Sneakers': 662,
+  'Hiking Boots': 455,
+  'Knit Trainers': 22,
+  'Court Sneakers': 1001,
+  'Leather Wallet': 464,
+  'Canvas Backpack': 342,
+  'Wool Beanie': 823,
+  'Polarized Sunglasses': 64,
+  'Crossbody Bag': 7,
+  'Silk Scarf': 1005,
+  'Minimalist Watch': 26,
+  'Leather Belt': 491,
+  'Weekender Duffel': 998,
+  'Card Holder': 36,
+  'Wireless Earbuds': 160,
+  'Smart Watch': 175,
+  'Bluetooth Speaker': 529,
+  'Noise-Cancelling Headphones': 39,
+  'Power Bank 20000': 816,
+  'Mechanical Keyboard': 366,
+  'Wireless Charger': 504,
+  'Action Camera': 250,
+  'Smart Desk Lamp': 445,
+  'Fitness Tracker': 367,
+  'Ceramic Vase': 1068,
+  'Soy Scented Candle': 999,
+  'Linen Throw Blanket': 1062,
+  'Oak Desk Organizer': 20,
+  'Pour-Over Coffee Set': 1060,
+  'Wool Area Rug': 625,
+  'Stoneware Mug Set': 635,
+  'Cotton Towel Set': 691,
+  'Glass Carafe': 225,
+  'Walnut Serving Board': 292,
+  'Hydrating Serum': 159,
+  'Daily Face Cream': 493,
+  'Lip Balm Trio': 429,
+  'Eau de Parfum': 360,
+  'Clay Detox Mask': 1027,
+  'Body Lotion': 365,
+  'Vitamin C Serum': 517,
+  'Nourishing Hair Oil': 312,
+  'Gentle Cleanser': 306,
+  'SPF 50 Sunscreen': 643,
+};
+
+function productImageUrl(noun: string, n: number): string {
+  const photo = PRODUCT_PHOTOS[noun];
+  return photo === undefined
+    ? `https://picsum.photos/seed/nebula-${n}/400/400`
+    : `https://picsum.photos/id/${photo}/400/400`;
+}
+
 /** Relative order likelihood per UTC hour: quiet nights, evening peak 18-22h. */
 const HOUR_WEIGHTS = [
   0.3, 0.2, 0.15, 0.1, 0.1, 0.15, 0.3, 0.5, 0.8, 1, 1.1, 1.2, 1.3, 1.2, 1.1, 1.1, 1.2, 1.4, 2.2,
@@ -426,7 +500,7 @@ function createProducts(f: Faker, nowMs: number): Product[] {
         category,
         price,
         compareAtPrice,
-        imageUrl: `https://picsum.photos/seed/nebula-${n}/400/400`,
+        imageUrl: productImageUrl(noun, n),
         stock,
         sold: 0,
         rating: round2(f.number.float({ min: 3.6, max: 5, fractionDigits: 1 })),
