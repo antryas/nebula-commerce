@@ -1,0 +1,125 @@
+<div class="nb-table-scroll" [class.is-loading]="store.loading()">
+  <table
+    mat-table
+    class="nb-table"
+    [dataSource]="store.items()"
+    [trackBy]="trackById"
+    matSort
+    matSortStart="desc"
+    [matSortActive]="sortActive()"
+    [matSortDirection]="store.query().dir"
+    (matSortChange)="onSort($event)"
+  >
+    <caption class="sr-only">
+      Orders, page
+      {{
+        store.query().page
+      }}
+    </caption>
+
+    <ng-container matColumnDef="select">
+      <th mat-header-cell *matHeaderCellDef class="nb-col-select">
+        <mat-checkbox
+          [checked]="store.allOnPageSelected()"
+          [indeterminate]="store.someOnPageSelected()"
+          [disabled]="!store.items().length"
+          (change)="store.toggleAllOnPage()"
+          aria-label="Select all orders on this page"
+        />
+      </th>
+      <!-- Clicks inside stop here so selecting never opens the order. -->
+      <td
+        mat-cell
+        *matCellDef="let o"
+        class="nb-col-select"
+        (click)="$event.stopPropagation()"
+        (keydown)="$event.stopPropagation()"
+      >
+        <mat-checkbox
+          [checked]="store.isSelected(o.id)"
+          (change)="store.toggle(o.id)"
+          [aria-label]="'Select order #' + o.number"
+        />
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="number">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Order</th>
+      <td mat-cell *matCellDef="let o">
+        <div class="nb-order-id">
+          <span class="nb-order-id__number">#{{ o.number }}</span>
+          <span class="nb-order-id__time">{{ o.createdAt | relativeTime }}</span>
+        </div>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="customerName">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Customer</th>
+      <td mat-cell *matCellDef="let o">
+        <div class="nb-customer">
+          <nb-avatar [src]="o.customerAvatarUrl" [name]="o.customerName" [size]="34" />
+          <div class="nb-customer__text">
+            <span class="nb-customer__name">{{ o.customerName }}</span>
+            <span class="nb-customer__email">{{ o.customerEmail }}</span>
+          </div>
+        </div>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="items">
+      <th mat-header-cell *matHeaderCellDef class="nb-num">Items</th>
+      <td mat-cell *matCellDef="let o" class="nb-num">{{ itemCount(o) }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="total">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header arrowPosition="before" class="nb-num">
+        Total
+      </th>
+      <td mat-cell *matCellDef="let o" class="nb-num nb-total">
+        {{ o.total | currency: 'USD' }}
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="payment">
+      <th mat-header-cell *matHeaderCellDef>Payment</th>
+      <td mat-cell *matCellDef="let o">
+        <span class="nb-payment">
+          <span class="material-symbols-rounded" aria-hidden="true">{{ paymentOf(o).icon }}</span>
+          <span class="nb-payment__label">{{ paymentOf(o).label }}</span>
+        </span>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="status">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
+      <td mat-cell *matCellDef="let o"><nb-status-chip [status]="o.status" /></td>
+    </ng-container>
+
+    <ng-container matColumnDef="actions">
+      <th mat-header-cell *matHeaderCellDef class="nb-col-actions">
+        <span class="sr-only">Actions</span>
+      </th>
+      <td
+        mat-cell
+        *matCellDef="let o"
+        class="nb-col-actions"
+        (click)="$event.stopPropagation()"
+        (keydown)="$event.stopPropagation()"
+      >
+        <nb-order-row-menu [order]="o" (changeStatus)="setStatus(o, $event)" />
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="columns; sticky: true"></tr>
+    <tr
+      mat-row
+      *matRowDef="let o; columns: columns"
+      data-order-row
+      tabindex="0"
+      [class.is-selected]="store.isSelected(o.id)"
+      [class.is-fresh]="store.isFresh(o.id)"
+      (click)="open(o)"
+      (keydown.enter)="open(o)"
+    ></tr>
+  </table>
+</div>

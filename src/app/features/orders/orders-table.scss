@@ -1,0 +1,204 @@
+:host {
+  display: block;
+  --nb-row-tint: color-mix(in srgb, var(--nb-accent-1) 7%, transparent);
+  --mat-table-background-color: transparent;
+  --mat-table-header-headline-color: var(--nb-muted);
+  --mat-table-row-item-label-text-color: var(--nb-text);
+  --mat-table-row-item-outline-color: color-mix(in srgb, var(--nb-border) 70%, transparent);
+  --mat-sort-arrow-color: var(--nb-muted);
+}
+
+.nb-table-scroll {
+  position: relative;
+  max-height: min(70vh, 52rem);
+  overflow: auto;
+  overscroll-behavior: contain;
+  transition: opacity 200ms ease;
+
+  &.is-loading {
+    opacity: 0.6;
+  }
+}
+
+.nb-table {
+  width: 100%;
+  min-width: 56rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.mat-mdc-header-cell {
+  height: 2.75rem;
+  border-bottom: 1px solid var(--nb-border);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  // Opaque, slightly tinted header so rows scroll cleanly underneath.
+  background: color-mix(in srgb, var(--nb-card) 94%, var(--nb-accent-1));
+}
+
+.mat-mdc-header-cell:first-child {
+  border-top-left-radius: 1rem;
+}
+
+.mat-mdc-header-cell:last-child {
+  border-top-right-radius: 1rem;
+}
+
+.mat-mdc-cell {
+  height: 4rem;
+  font-size: 0.875rem;
+  transition:
+    background-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.mat-mdc-row {
+  cursor: pointer;
+  outline: none;
+
+  &:hover .mat-mdc-cell,
+  &:focus-visible .mat-mdc-cell {
+    background: var(--nb-row-tint);
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, var(--nb-accent-1) 22%, transparent),
+      inset 0 -1px 0 color-mix(in srgb, var(--nb-accent-1) 22%, transparent);
+  }
+
+  &:hover .mat-mdc-cell:first-child,
+  &:focus-visible .mat-mdc-cell:first-child {
+    box-shadow:
+      inset 3px 0 0 var(--nb-accent-1),
+      inset 12px 0 18px -12px var(--nb-accent-1),
+      inset 0 1px 0 color-mix(in srgb, var(--nb-accent-1) 22%, transparent),
+      inset 0 -1px 0 color-mix(in srgb, var(--nb-accent-1) 22%, transparent);
+  }
+
+  &:focus-visible .mat-mdc-cell:first-child {
+    box-shadow:
+      inset 3px 0 0 var(--nb-accent-2),
+      inset 0 0 0 1px var(--nb-accent-2);
+  }
+
+  &.is-selected .mat-mdc-cell {
+    background: color-mix(in srgb, var(--nb-accent-1) 11%, transparent);
+  }
+
+  &:last-child .mat-mdc-cell {
+    border-bottom-color: transparent;
+  }
+
+  &.is-fresh .mat-mdc-cell {
+    animation: nb-row-flash 2.4s ease-out both;
+  }
+
+  &.is-fresh .mat-mdc-cell:first-child {
+    box-shadow: inset 3px 0 0 var(--nb-accent-2);
+  }
+}
+
+@keyframes nb-row-flash {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+    background: color-mix(in srgb, var(--nb-accent-2) 28%, transparent);
+  }
+  18% {
+    opacity: 1;
+    transform: none;
+    background: color-mix(in srgb, var(--nb-accent-2) 22%, transparent);
+  }
+  100% {
+    background: transparent;
+  }
+}
+
+.nb-col-select {
+  width: 3.5rem;
+  padding-right: 0 !important;
+}
+
+.nb-col-actions {
+  width: 3.5rem;
+  text-align: right;
+}
+
+.nb-num {
+  text-align: right;
+}
+
+.nb-order-id {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.nb-order-id__number {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.nb-order-id__time,
+.nb-customer__email {
+  font-size: 0.75rem;
+  color: var(--nb-muted);
+}
+
+.nb-customer {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.nb-customer__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.nb-customer__name {
+  font-weight: 500;
+}
+
+.nb-customer__name,
+.nb-customer__email {
+  max-width: 15rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nb-total {
+  font-weight: 600;
+}
+
+.nb-payment {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--nb-muted);
+
+  .material-symbols-rounded {
+    display: grid;
+    place-items: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    overflow: hidden;
+    border-radius: 0.5rem;
+    font-size: 1.0625rem;
+    color: var(--nb-text);
+    background: color-mix(in srgb, var(--nb-text) 6%, transparent);
+  }
+}
+
+@media (max-width: 1199.98px) {
+  .nb-payment__label {
+    display: none;
+  }
+}
+
+// The sort header's inner container belongs to MatSortHeader's own template.
+:host ::ng-deep .nb-num .mat-sort-header-container {
+  justify-content: flex-end;
+}

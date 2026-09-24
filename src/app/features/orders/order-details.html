@@ -1,0 +1,181 @@
+<a class="nb-back" routerLink="/orders">
+  <span class="material-symbols-rounded" aria-hidden="true">arrow_back</span>
+  All orders
+</a>
+
+@switch (view().kind) {
+  @case ('loading') {
+    <nb-page-header title="Order details" subtitle="Loading…" />
+    <div class="nb-details-grid">
+      <nb-glass-card class="nb-span-main"><nb-skeleton [rows]="6" [height]="44" /></nb-glass-card>
+      <nb-glass-card><nb-skeleton [rows]="5" [height]="20" /></nb-glass-card>
+    </div>
+  }
+  @case ('not-found') {
+    <nb-page-header title="Order details" />
+    <nb-glass-card [padded]="false">
+      <nb-empty-state
+        icon="receipt_long"
+        title="Order not found"
+        message="It may have been removed, or the link is incorrect."
+      >
+        <a class="nb-btn" routerLink="/orders">
+          <span class="material-symbols-rounded" aria-hidden="true">arrow_back</span>
+          Back to orders
+        </a>
+      </nb-empty-state>
+    </nb-glass-card>
+  }
+  @case ('error') {
+    <nb-page-header title="Order details" />
+    <nb-glass-card [padded]="false">
+      <nb-error-state title="Couldn't load this order" [error]="loadError()" (retry)="retry()" />
+    </nb-glass-card>
+  }
+}
+
+@if (order(); as o) {
+  <nb-page-header
+    [title]="'Order #' + o.number"
+    [subtitle]="
+      'Placed ' +
+      (o.createdAt | date: 'MMM d, y · h:mm a') +
+      ' · ' +
+      units() +
+      (units() === 1 ? ' item' : ' items')
+    "
+  >
+    <nb-status-chip class="nb-head-chip" [status]="o.status" />
+    <button
+      type="button"
+      class="nb-btn nb-btn--primary"
+      [matMenuTriggerFor]="statusMenu"
+      [disabled]="!targets().length || updating()"
+      [attr.aria-describedby]="targets().length ? null : 'nb-closed-hint'"
+    >
+      <span class="material-symbols-rounded" aria-hidden="true">swap_horiz</span>
+      Change status
+    </button>
+    @if (!targets().length) {
+      <span id="nb-closed-hint" class="sr-only">This order is closed.</span>
+    }
+    <mat-menu #statusMenu="matMenu" xPosition="before">
+      @for (s of targets(); track s) {
+        <button type="button" mat-menu-item (click)="changeStatus(s)">
+          <span
+            class="material-symbols-rounded nb-menu-icon"
+            aria-hidden="true"
+            [style.color]="meta[s].color"
+            >{{ meta[s].icon }}</span
+          >
+          {{ meta[s].label }}
+        </button>
+      }
+    </mat-menu>
+  </nb-page-header>
+
+  <div class="nb-details-grid">
+    <div class="nb-span-main nb-stack">
+      <nb-glass-card [nbStagger]="0">
+        <h2 class="nb-card-title">
+          Items <span class="nb-card-title__count">{{ o.items.length }}</span>
+        </h2>
+        <ul class="nb-items">
+          @for (item of o.items; track $index) {
+            <li class="nb-item" data-order-item>
+              <img
+                class="nb-item__img"
+                [src]="item.imageUrl"
+                [alt]="item.name"
+                width="56"
+                height="56"
+                loading="lazy"
+                referrerpolicy="no-referrer"
+              />
+              <div class="nb-item__info">
+                <span class="nb-item__name">{{ item.name }}</span>
+                <span class="nb-item__sku">SKU {{ item.sku }}</span>
+              </div>
+              <span class="nb-item__qty"
+                >{{ item.quantity }} × {{ item.unitPrice | currency: 'USD' }}</span
+              >
+              <span class="nb-item__line">{{
+                item.quantity * item.unitPrice | currency: 'USD'
+              }}</span>
+            </li>
+          }
+        </ul>
+        <dl class="nb-totals">
+          <div>
+            <dt>Subtotal</dt>
+            <dd>{{ o.subtotal | currency: 'USD' }}</dd>
+          </div>
+          <div>
+            <dt>Shipping</dt>
+            <dd>{{ o.shipping ? (o.shipping | currency: 'USD') : 'Free' }}</dd>
+          </div>
+          <div>
+            <dt>Tax</dt>
+            <dd>{{ o.tax | currency: 'USD' }}</dd>
+          </div>
+          <div class="nb-totals__grand">
+            <dt>Total</dt>
+            <dd class="nb-gradient-text">{{ o.total | currency: 'USD' }}</dd>
+          </div>
+        </dl>
+      </nb-glass-card>
+
+      <nb-glass-card [nbStagger]="1">
+        <h2 class="nb-card-title">Status timeline</h2>
+        <nb-order-timeline [steps]="timeline()" />
+      </nb-glass-card>
+    </div>
+
+    <div class="nb-stack">
+      <nb-glass-card [nbStagger]="2">
+        <h2 class="nb-card-title">Customer</h2>
+        <div class="nb-customer">
+          <nb-avatar [src]="o.customerAvatarUrl" [name]="o.customerName" [size]="48" />
+          <div class="nb-customer__text">
+            <span class="nb-customer__name">{{ o.customerName }}</span>
+            <a class="nb-customer__email" [href]="'mailto:' + o.customerEmail">{{
+              o.customerEmail
+            }}</a>
+          </div>
+        </div>
+        <a class="nb-btn nb-btn--block" [routerLink]="['/customers', o.customerId]">
+          View profile
+          <span class="material-symbols-rounded" aria-hidden="true">arrow_forward</span>
+        </a>
+      </nb-glass-card>
+
+      <nb-glass-card [nbStagger]="3">
+        <h2 class="nb-card-title">Shipping address</h2>
+        <address class="nb-address">
+          <span class="nb-address__flag" aria-hidden="true">{{ flag() }}</span>
+          <span>
+            {{ o.shippingAddress.line1 }}<br />
+            {{ o.shippingAddress.city }}, {{ o.shippingAddress.postalCode }}<br />
+            {{ o.shippingAddress.country }}
+          </span>
+        </address>
+      </nb-glass-card>
+
+      <nb-glass-card [nbStagger]="4">
+        <h2 class="nb-card-title">Payment</h2>
+        <div class="nb-payment">
+          <span class="nb-payment__icon material-symbols-rounded" aria-hidden="true">{{
+            payment[o.paymentMethod].icon
+          }}</span>
+          <div>
+            <span class="nb-payment__label">{{ payment[o.paymentMethod].label }}</span>
+            <span class="nb-payment__meta"
+              >{{ o.status === 'cancelled' ? 'Refunded' : 'Paid' }} ·
+              {{ o.total | currency: 'USD' }}</span
+            >
+          </div>
+        </div>
+      </nb-glass-card>
+    </div>
+  </div>
+}
