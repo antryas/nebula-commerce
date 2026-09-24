@@ -1,0 +1,65 @@
+<nb-page-header title="Orders" [subtitle]="subtitle()">
+  @if (store.isLiveView()) {
+    <span class="nb-live-hint" title="New orders appear here automatically">
+      <span class="nb-live-hint__dot" aria-hidden="true"></span>
+      Live
+    </span>
+  }
+  <button type="button" class="nb-export" [disabled]="!store.items().length" (click)="exportCsv()">
+    <span class="material-symbols-rounded" aria-hidden="true">download</span>
+    Export CSV
+  </button>
+</nb-page-header>
+
+<nb-glass-card class="nb-orders-card" [padded]="false">
+  <nb-orders-filters class="nb-orders-card__filters" />
+
+  <div class="nb-orders-card__body">
+    @if (store.loading() && store.result()) {
+      <span class="nb-progress" role="progressbar" aria-label="Loading orders"></span>
+    }
+
+    @if (initialLoading()) {
+      <nb-skeleton
+        class="nb-orders-card__skeleton"
+        [rows]="8"
+        [height]="40"
+        label="Loading orders"
+      />
+    } @else if (store.error(); as error) {
+      <nb-error-state title="Couldn't load orders" [error]="error" (retry)="store.reload()" />
+    } @else if (!store.items().length) {
+      <nb-empty-state
+        icon="search_off"
+        title="No orders found"
+        message="Try a different search, status or date range."
+      >
+        @if (store.hasFilters()) {
+          <button type="button" class="nb-export" (click)="store.resetFilters()">
+            <span class="material-symbols-rounded" aria-hidden="true">filter_alt_off</span>
+            Clear filters
+          </button>
+        }
+      </nb-empty-state>
+    } @else if (isMobile()) {
+      <nb-order-cards class="nb-orders-card__cards" />
+    } @else {
+      <nb-orders-table />
+    }
+  </div>
+
+  @if (store.total() > 0 && !store.error()) {
+    <mat-paginator
+      class="nb-paginator"
+      [length]="store.total()"
+      [pageIndex]="store.query().page - 1"
+      [pageSize]="store.query().pageSize"
+      [pageSizeOptions]="[10, 20, 50]"
+      [hidePageSize]="isMobile()"
+      aria-label="Orders pages"
+      (page)="onPage($event)"
+    />
+  }
+</nb-glass-card>
+
+<nb-bulk-bar />

@@ -1,0 +1,75 @@
+<div class="nb-filters">
+  <label class="nb-search-field">
+    <span class="material-symbols-rounded nb-search-field__icon" aria-hidden="true">search</span>
+    <span class="sr-only">Search orders</span>
+    <input
+      type="search"
+      name="search"
+      autocomplete="off"
+      placeholder="Search by order #, customer or email"
+      [value]="store.searchText()"
+      (input)="onSearch($event)"
+    />
+    @if (store.searchText()) {
+      <button
+        type="button"
+        class="nb-search-field__clear"
+        aria-label="Clear search"
+        (click)="clearSearch()"
+      >
+        <span class="material-symbols-rounded" aria-hidden="true">close</span>
+      </button>
+    }
+  </label>
+
+  <div class="nb-status-filter" role="group" aria-label="Filter by status">
+    <button
+      type="button"
+      class="nb-filter-chip"
+      [class.is-active]="activeStatus().size === 0"
+      [attr.aria-pressed]="activeStatus().size === 0"
+      (click)="selectAll()"
+    >
+      All
+    </button>
+    @for (s of statuses; track s) {
+      <button
+        type="button"
+        class="nb-filter-chip"
+        [class.is-active]="activeStatus().has(s)"
+        [attr.aria-pressed]="activeStatus().has(s)"
+        [style.--nb-chip-color]="meta[s].color"
+        (click)="toggleStatus(s)"
+      >
+        <span class="nb-filter-chip__dot" aria-hidden="true"></span>
+        {{ meta[s].label }}
+      </button>
+    }
+  </div>
+
+  <div class="nb-range" [formGroup]="range">
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="nb-range__field">
+      <mat-label>Created</mat-label>
+      <mat-date-range-input [rangePicker]="picker">
+        <input matStartDate formControlName="start" placeholder="Start date" />
+        <input matEndDate formControlName="end" placeholder="End date" />
+      </mat-date-range-input>
+      <mat-datepicker-toggle matIconSuffix [for]="picker">
+        <span matDatepickerToggleIcon class="material-symbols-rounded" aria-hidden="true"
+          >calendar_month</span
+        >
+      </mat-datepicker-toggle>
+      <mat-date-range-picker #picker />
+    </mat-form-field>
+    @if (hasRange()) {
+      <button
+        type="button"
+        class="nb-icon-btn nb-range__clear"
+        aria-label="Clear date range"
+        (click)="clearRange()"
+      >
+        <span class="material-symbols-rounded" aria-hidden="true">event_busy</span>
+      </button>
+    }
+  </div>
+</div>
