@@ -1,0 +1,57 @@
+<div class="nb-art__grid" aria-hidden="true"></div>
+<div class="nb-art__planet" aria-hidden="true"></div>
+
+<div class="nb-brand-lockup">
+  <span class="nb-brand-mark" aria-hidden="true">N</span>
+  <span>Nebula <span>Commerce</span></span>
+</div>
+
+<div class="nb-art__copy">
+  <p class="nb-eyebrow"><span class="nb-eyebrow__dot"></span>Real-time commerce dashboard</p>
+  <p class="nb-headline">
+    Run your store at the <span class="nb-gradient-text">speed of light.</span>
+  </p>
+  <p class="nb-art__lead">
+    Orders, fulfillment, catalog and analytics in one command center, updated live as customers
+    check out.
+  </p>
+</div>
+
+<div class="nb-cards" aria-hidden="true">
+  <div class="nb-mini nb-mini--revenue">
+    <p class="nb-mini__label">Revenue · 30 days</p>
+    <p class="nb-mini__value">$128,420</p>
+    <div class="nb-mini__row">
+      <span class="nb-delta">▲ 12.4%</span>
+      <nb-sparkline [data]="spark" [width]="120" [height]="36" />
+    </div>
+  </div>
+
+  <div class="nb-mini nb-mini--order">
+    <span class="nb-mini__icon material-symbols-rounded">shopping_bag</span>
+    <div>
+      <p class="nb-mini__title">New order #1284</p>
+      <p class="nb-mini__sub">Ada Lovelace · $249.00</p>
+    </div>
+    <span class="nb-mini__live"><span></span>now</span>
+  </div>
+
+  <div class="nb-mini nb-mini--conversion">
+    <p class="nb-mini__label">Conversion</p>
+    <p class="nb-mini__value">3.42%</p>
+    <div class="nb-bars">
+      @for (h of bars; track $index) {
+        <span [style.height.%]="h"></span>
+      }
+    </div>
+  </div>
+</div>
+
+<ul class="nb-features">
+  <li><span class="material-symbols-rounded" aria-hidden="true">bolt</span>Live orders</li>
+  <li>
+    <span class="material-symbols-rounded" aria-hidden="true">keyboard_command_key</span>Command
+    palette
+  </li>
+  <li><span class="material-symbols-rounded" aria-hidden="true">contrast</span>Dark &amp; light</li>
+</ul>

@@ -2,6 +2,7 @@
 @use 'styles/tokens';
 @use 'styles/material-theme';
 @use 'styles/effects';
+@use 'styles/components';
 
 // Class-based dark mode for Tailwind `dark:` utilities (`.dark` on <html>).
 @custom-variant dark (&:where(.dark, .dark *));
@@ -20,5 +21,6 @@
   --color-nb-warning: var(--nb-warning);
   --color-nb-danger: var(--nb-danger);
   --color-nb-info: var(--nb-info);
+  --color-nb-shipped: var(--nb-shipped);
   --font-sans: Inter, system-ui, sans-serif;
 }

@@ -4,21 +4,35 @@ import {
   provideBrowserGlobalErrorListeners,
   provideZonelessChangeDetection,
 } from '@angular/core';
-import { provideRouter } from '@angular/router';
+import {
+  TitleStrategy,
+  provideRouter,
+  withComponentInputBinding,
+  withViewTransitions,
+} from '@angular/router';
+import { provideEchartsCore } from 'ngx-echarts';
 import { environment } from '../environments/environment';
 import { routes } from './app.routes';
 import { errorInterceptor } from './core/http/error.interceptor';
+import { NebulaTitleStrategy } from './core/layout/title-strategy';
 import { mockApiInterceptor } from './mock-api/mock-api.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideZonelessChangeDetection(),
-    provideRouter(routes),
+    provideRouter(
+      routes,
+      withViewTransitions({ skipInitialTransition: true }),
+      withComponentInputBinding(),
+    ),
+    { provide: TitleStrategy, useClass: NebulaTitleStrategy },
     // errorInterceptor runs first so it also normalizes errors produced by the mock backend.
     provideHttpClient(
       withFetch(),
       withInterceptors([errorInterceptor, ...(environment.useMockApi ? [mockApiInterceptor] : [])]),
     ),
+    // ECharts itself is fetched on demand by the first chart, keeping it out of the initial bundle.
+    provideEchartsCore({ echarts: () => import('echarts') }),
   ],
 };

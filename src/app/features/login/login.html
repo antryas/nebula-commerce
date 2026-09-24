@@ -1,0 +1,103 @@
+<div class="nb-login">
+  <nb-login-art />
+
+  <section class="nb-auth">
+    <div class="nb-auth__card">
+      <div class="nb-brand-lockup nb-auth__brand">
+        <span class="nb-brand-mark" aria-hidden="true">N</span>
+        <span>Nebula <span>Commerce</span></span>
+      </div>
+
+      <h1 class="nb-auth__title">Welcome back</h1>
+      <p class="nb-auth__subtitle">Sign in to your Nebula dashboard.</p>
+
+      <p class="nb-demo">
+        <span class="material-symbols-rounded" aria-hidden="true">auto_awesome</span>
+        Demo account: credentials are prefilled.
+      </p>
+
+      <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        <div class="nb-field" [class.has-error]="errorFor('email')">
+          <label for="login-email">Email</label>
+          <div class="nb-field__control">
+            <span class="material-symbols-rounded" aria-hidden="true">alternate_email</span>
+            <input
+              id="login-email"
+              name="email"
+              type="email"
+              autocomplete="username"
+              formControlName="email"
+              [attr.aria-invalid]="!!errorFor('email')"
+              [attr.aria-describedby]="errorFor('email') ? 'login-email-error' : null"
+            />
+          </div>
+          @if (errorFor('email'); as message) {
+            <p id="login-email-error" class="nb-field__error">{{ message }}</p>
+          }
+        </div>
+
+        <div class="nb-field" [class.has-error]="errorFor('password')">
+          <label for="login-password">Password</label>
+          <div class="nb-field__control">
+            <span class="material-symbols-rounded" aria-hidden="true">lock</span>
+            <input
+              id="login-password"
+              name="password"
+              [type]="showPassword() ? 'text' : 'password'"
+              autocomplete="current-password"
+              formControlName="password"
+              [attr.aria-invalid]="!!errorFor('password')"
+              [attr.aria-describedby]="errorFor('password') ? 'login-password-error' : null"
+            />
+            <button
+              type="button"
+              class="nb-field__toggle"
+              [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'"
+              [attr.aria-pressed]="showPassword()"
+              (click)="showPassword.set(!showPassword())"
+            >
+              <span class="material-symbols-rounded" aria-hidden="true">{{
+                showPassword() ? 'visibility_off' : 'visibility'
+              }}</span>
+            </button>
+          </div>
+          @if (errorFor('password'); as message) {
+            <p id="login-password-error" class="nb-field__error">{{ message }}</p>
+          }
+        </div>
+
+        <label class="nb-check">
+          <input type="checkbox" name="remember" formControlName="remember" />
+          <span class="nb-check__box" aria-hidden="true"></span>
+          Remember me on this device
+        </label>
+
+        @if (error(); as message) {
+          <p class="nb-form-error" role="alert">
+            <span class="material-symbols-rounded" aria-hidden="true">error</span>{{ message }}
+          </p>
+        }
+
+        <button
+          type="submit"
+          class="nb-submit"
+          [class.is-loading]="loading()"
+          [disabled]="loading()"
+        >
+          @if (loading()) {
+            <span class="nb-spinner" aria-hidden="true"></span>
+            Signing in…
+          } @else {
+            Sign in
+            <span class="material-symbols-rounded" aria-hidden="true">arrow_forward</span>
+          }
+        </button>
+      </form>
+
+      <p class="nb-auth__hint">
+        Tip: after signing in, press <kbd class="nb-kbd">Ctrl K</kbd> to jump anywhere.
+      </p>
+    </div>
+    <p class="nb-auth__legal">Nebula Commerce · portfolio demo with mock data</p>
+  </section>
+</div>

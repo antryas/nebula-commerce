@@ -1,4 +1,3 @@
-import { LiveAnnouncer } from '@angular/cdk/a11y';
 import { DOCUMENT, DestroyRef, Injectable, inject, signal } from '@angular/core';
 import { Subscription, finalize } from 'rxjs';
 import { Order } from '../../models';
@@ -13,14 +12,14 @@ const usd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' 
 
 /**
  * Simulated real-time order feed. While running, it asks the backend for a new order every
- * 6-10 s (only when `enabled` and signed in), then toasts and announces it.
+ * 6-10 s (only when `enabled` and signed in), then toasts it. Screen readers hear the toast
+ * through the toast host's polite live region, so there is no separate announcement.
  */
 @Injectable({ providedIn: 'root' })
 export class LiveOrdersService {
   private readonly api = inject(LiveApi);
   private readonly auth = inject(AuthService);
   private readonly toasts = inject(ToastService);
-  private readonly announcer = inject(LiveAnnouncer);
 
   private readonly _latest = signal<Order | null>(null);
   private readonly _count = signal(0);
@@ -85,10 +84,6 @@ export class LiveOrdersService {
       title: `New order #${order.number}`,
       message: `${order.customerName} · ${total}`,
     });
-    void this.announcer.announce(
-      `New order #${order.number} from ${order.customerName}, ${total}`,
-      'polite',
-    );
   }
 }
 

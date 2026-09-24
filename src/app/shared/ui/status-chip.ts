@@ -12,7 +12,7 @@ export interface StatusMeta {
 export const STATUS_META: Record<OrderStatus, StatusMeta> = {
   new: { label: 'New', color: 'var(--nb-info)', icon: 'fiber_new' },
   packing: { label: 'Packing', color: 'var(--nb-warning)', icon: 'inventory_2' },
-  shipped: { label: 'Shipped', color: 'var(--nb-accent-1)', icon: 'local_shipping' },
+  shipped: { label: 'Shipped', color: 'var(--nb-shipped)', icon: 'local_shipping' },
   delivered: { label: 'Delivered', color: 'var(--nb-success)', icon: 'task_alt' },
   cancelled: { label: 'Cancelled', color: 'var(--nb-danger)', icon: 'cancel' },
 };

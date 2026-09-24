@@ -78,7 +78,8 @@ describe('LiveOrdersService', () => {
       title: 'New order #1900',
       message: 'Ada Lovelace · $1,234.50',
     });
-    expect(announce).toHaveBeenCalledWith(expect.stringContaining('New order #1900'), 'polite');
+    // The toast host's aria-live region announces it; no second LiveAnnouncer message.
+    expect(announce).not.toHaveBeenCalled();
   });
 
   it('keeps ticking while running and stop() prevents further requests', () => {

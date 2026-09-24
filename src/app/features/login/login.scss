@@ -1,0 +1,324 @@
+:host {
+  display: block;
+}
+
+.nb-login {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+// ---------------------------------------------------------------- Form side
+.nb-auth {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  padding: 2rem 1.5rem;
+}
+.nb-auth__card {
+  position: relative;
+  width: min(100%, 26.5rem);
+  padding: 2.5rem 2.25rem 2rem;
+  border: 1px solid var(--nb-glass-border);
+  border-radius: 1.5rem;
+  background: var(--nb-glass-bg);
+  backdrop-filter: blur(24px) saturate(150%);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.06) inset,
+    0 40px 80px -40px rgba(0, 0, 0, 0.6);
+  // Hairline accent along the top edge.
+  &::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    right: 2.5rem;
+    left: 2.5rem;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--nb-accent-1),
+      var(--nb-accent-2),
+      transparent
+    );
+  }
+}
+.nb-auth__brand {
+  display: none;
+  margin-bottom: 1.75rem;
+}
+.nb-auth__title {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+.nb-auth__subtitle {
+  margin: 0.375rem 0 1.25rem;
+  color: var(--nb-muted);
+}
+.nb-demo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 1.5rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: 0.75rem;
+  font-size: 0.8125rem;
+  color: color-mix(in srgb, var(--nb-accent-1) 60%, var(--nb-text));
+  background: color-mix(in srgb, var(--nb-accent-1) 12%, transparent);
+  .material-symbols-rounded {
+    font-size: 1.125rem;
+  }
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.125rem;
+}
+.nb-field {
+  label {
+    display: block;
+    margin-bottom: 0.4375rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+  }
+}
+.nb-field__control {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  height: 3rem;
+  padding: 0 0.375rem 0 0.875rem;
+  border: 1px solid color-mix(in srgb, var(--nb-muted) 35%, var(--nb-border));
+  border-radius: 0.875rem;
+  background: color-mix(in srgb, var(--nb-bg) 55%, transparent);
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+  &:focus-within {
+    border-color: var(--nb-accent-1);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--nb-accent-1) 22%, transparent);
+  }
+  > .material-symbols-rounded {
+    width: 1.25rem;
+    overflow: hidden;
+    font-size: 1.25rem;
+    color: var(--nb-muted);
+  }
+  input {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    border: 0;
+    outline: none;
+    font: inherit;
+    font-size: 0.9375rem;
+    color: var(--nb-text);
+    background: transparent;
+  }
+}
+.nb-field.has-error .nb-field__control {
+  border-color: var(--nb-danger);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--nb-danger) 16%, transparent);
+}
+.nb-field__error {
+  margin: 0.375rem 0 0;
+  font-size: 0.8125rem;
+  color: color-mix(in srgb, var(--nb-danger) 80%, var(--nb-text));
+}
+.nb-field__toggle {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 0;
+  border-radius: 0.625rem;
+  color: var(--nb-muted);
+  background: transparent;
+  cursor: pointer;
+  &:hover {
+    color: var(--nb-text);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--nb-accent-2);
+  }
+  .material-symbols-rounded {
+    width: 1.25rem;
+    overflow: hidden;
+    font-size: 1.25rem;
+  }
+}
+
+.nb-check {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  font-size: 0.875rem;
+  color: var(--nb-muted);
+  cursor: pointer;
+  input {
+    position: absolute;
+    opacity: 0;
+  }
+}
+.nb-check__box {
+  display: grid;
+  place-items: center;
+  width: 1.125rem;
+  height: 1.125rem;
+  border: 1.5px solid color-mix(in srgb, var(--nb-muted) 60%, transparent);
+  border-radius: 0.3125rem;
+  transition: background-color 150ms ease;
+  &::after {
+    content: '';
+    width: 0.3125rem;
+    height: 0.5625rem;
+    margin-top: -2px;
+    border: solid #fff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg) scale(0);
+    transition: transform 150ms ease;
+  }
+}
+.nb-check input:checked + .nb-check__box {
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--nb-accent-1), var(--nb-accent-2));
+  &::after {
+    transform: rotate(45deg) scale(1);
+  }
+}
+.nb-check input:focus-visible + .nb-check__box {
+  outline: 2px solid var(--nb-accent-2);
+  outline-offset: 2px;
+}
+
+.nb-form-error {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0.625rem 0.75rem;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  color: color-mix(in srgb, var(--nb-danger) 80%, var(--nb-text));
+  background: color-mix(in srgb, var(--nb-danger) 12%, transparent);
+  .material-symbols-rounded {
+    font-size: 1.125rem;
+  }
+}
+
+.nb-submit {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 3rem;
+  margin-top: 0.375rem;
+  overflow: hidden;
+  border: 0;
+  border-radius: 0.875rem;
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #fff;
+  // Darkened gradient keeps white text readable on every accent preset.
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--nb-accent-1) 88%, #000),
+    color-mix(in srgb, var(--nb-accent-2) 72%, #000)
+  );
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.25) inset,
+    0 14px 30px -12px var(--nb-accent-1);
+  cursor: pointer;
+  transition:
+    transform 150ms ease,
+    box-shadow 150ms ease;
+  // Sheen sweep on hover.
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      110deg,
+      transparent 30%,
+      rgba(255, 255, 255, 0.28) 50%,
+      transparent 70%
+    );
+    transform: translateX(-100%);
+    transition: transform 700ms ease;
+  }
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.25) inset,
+      0 18px 40px -12px var(--nb-accent-1);
+    &::after {
+      transform: translateX(100%);
+    }
+  }
+  &:focus-visible {
+    outline: 2px solid var(--nb-accent-2);
+    outline-offset: 3px;
+  }
+  &:disabled {
+    cursor: progress;
+    opacity: 0.85;
+  }
+  .material-symbols-rounded {
+    font-size: 1.25rem;
+  }
+}
+.nb-spinner {
+  width: 1.125rem;
+  height: 1.125rem;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: nb-login-spin 700ms linear infinite;
+}
+@keyframes nb-login-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.nb-auth__hint {
+  margin: 1.5rem 0 0;
+  font-size: 0.8125rem;
+  text-align: center;
+  color: var(--nb-muted);
+}
+.nb-auth__legal {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--nb-muted);
+}
+
+// ---------------------------------------------------------------- Responsive
+@media (max-width: 899.98px) {
+  .nb-login {
+    grid-template-columns: 1fr;
+  }
+  nb-login-art {
+    display: none;
+  }
+  .nb-auth__brand {
+    display: flex;
+  }
+}
+@media (max-width: 480px) {
+  .nb-auth {
+    padding: 1.5rem 1rem;
+  }
+  .nb-auth__card {
+    padding: 2rem 1.25rem 1.5rem;
+  }
+}
