@@ -1,8 +1,9 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpContext } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ListQuery, Order, OrderStatus, Paged } from '../../models';
+import { SKIP_ERROR_TOAST } from '../http/error.interceptor';
 import { toHttpParams } from './params';
 
 export interface OrdersQuery extends ListQuery {
@@ -26,8 +27,17 @@ export class OrdersApi {
     return this.http.get<Order>(`${this.base}/${encodeURIComponent(id)}`);
   }
 
-  updateStatus(id: string, status: OrderStatus): Observable<Order> {
-    return this.http.patch<Order>(`${this.base}/${encodeURIComponent(id)}/status`, { status });
+  /** `silent` suppresses the global error toast when the caller reports failures itself. */
+  updateStatus(
+    id: string,
+    status: OrderStatus,
+    opts: { silent?: boolean } = {},
+  ): Observable<Order> {
+    return this.http.patch<Order>(
+      `${this.base}/${encodeURIComponent(id)}/status`,
+      { status },
+      { context: new HttpContext().set(SKIP_ERROR_TOAST, opts.silent ?? false) },
+    );
   }
 
   bulkStatus(ids: string[], status: OrderStatus): Observable<{ updated: number }> {
