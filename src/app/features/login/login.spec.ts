@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
+import { ApiConfigService, BACKEND_STORAGE_KEY } from '../../core/api/api-config.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { User } from '../../models';
 import { Login } from './login';
@@ -31,6 +32,20 @@ async function setup(login = vi.fn().mockReturnValue(of(USER))) {
 }
 
 describe('Login', () => {
+  afterEach(() => {
+    localStorage.removeItem(BACKEND_STORAGE_KEY);
+  });
+
+  it('names the backend in the footer note', async () => {
+    const { fixture, el } = await setup();
+    const note = () => el.querySelector('.nb-auth__legal')?.textContent?.trim();
+    expect(note()).toBe('Nebula Commerce · portfolio demo with mock data');
+
+    TestBed.inject(ApiConfigService).setMode('live');
+    await fixture.whenStable();
+    expect(note()).toBe('Nebula Commerce · portfolio demo on a live ASP.NET Core API');
+  });
+
   it('is prefilled with the demo credentials and valid', async () => {
     const { input, el } = await setup();
     expect(input('email').value).toBe('alex@nebula.store');

@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { ApiConfigService } from '../../core/api/api-config.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { isApiError } from '../../core/http/api-error';
 import { LoginArt } from './login-art';
@@ -29,6 +30,7 @@ function safeRedirect(url: string | undefined): string {
 export class Login {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly apiConfig = inject(ApiConfigService);
 
   /** `?returnUrl=` query param, bound via `withComponentInputBinding()`. */
   readonly returnUrl = input<string>();
@@ -38,6 +40,13 @@ export class Login {
     password: [DEMO_PASSWORD, [Validators.required, Validators.minLength(6)]],
     remember: [true],
   });
+
+  /** Footer note: which backend this sign-in goes to. */
+  protected readonly backendNote = computed(() =>
+    this.apiConfig.mode() === 'live'
+      ? 'portfolio demo on a live ASP.NET Core API'
+      : 'portfolio demo with mock data',
+  );
 
   protected readonly loading = signal(false);
   protected readonly error = signal<string | null>(null);

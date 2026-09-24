@@ -3,12 +3,14 @@ import {
   ChangeDetectionStrategy,
   Component,
   booleanAttribute,
+  computed,
   inject,
   input,
   output,
 } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { Avatar } from '../../shared/ui/avatar';
+import { ApiConfigService } from '../api/api-config.service';
 import { AuthService } from '../auth/auth.service';
 import { LiveOrdersService } from '../live/live-orders.service';
 import { NAV_ITEMS } from './nav-items';
@@ -80,7 +82,8 @@ import { NAV_ITEMS } from './nav-items';
           <span class="material-symbols-rounded" aria-hidden="true">bolt</span>
           <p>
             <strong>Live demo</strong>
-            Mock API with real-time orders. Press <kbd class="nb-kbd">Ctrl K</kbd> to jump anywhere.
+            {{ isLive() ? 'Live .NET API' : 'Mock API' }} with real-time orders. Press
+            <kbd class="nb-kbd">Ctrl K</kbd> to jump anywhere.
           </p>
         </div>
 
@@ -456,6 +459,8 @@ import { NAV_ITEMS } from './nav-items';
 export class Sidebar {
   protected readonly auth = inject(AuthService);
   protected readonly live = inject(LiveOrdersService);
+  private readonly apiConfig = inject(ApiConfigService);
+  protected readonly isLive = computed(() => this.apiConfig.mode() === 'live');
   protected readonly items = NAV_ITEMS;
 
   readonly collapsed = input(false, { transform: booleanAttribute });
