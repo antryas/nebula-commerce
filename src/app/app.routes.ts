@@ -1,5 +1,6 @@
 import { Route, Routes } from '@angular/router';
 import { authGuard, guestGuard } from './core/auth/auth.guard';
+import { unsavedChangesGuard } from './features/products/unsaved-changes.guard';
 
 type LoadComponent = NonNullable<Route['loadComponent']>;
 
@@ -34,12 +35,18 @@ export const routes: Routes = [
       page('products', 'Products', () =>
         import('./features/products/products').then((m) => m.Products),
       ),
-      page('products/new', 'New product', () =>
-        import('./features/products/product-edit').then((m) => m.ProductEdit),
-      ),
-      page('products/:id/edit', 'Edit product', () =>
-        import('./features/products/product-edit').then((m) => m.ProductEdit),
-      ),
+      {
+        ...page('products/new', 'New product', () =>
+          import('./features/products/product-edit').then((m) => m.ProductEdit),
+        ),
+        canDeactivate: [unsavedChangesGuard],
+      },
+      {
+        ...page('products/:id/edit', 'Edit product', () =>
+          import('./features/products/product-edit').then((m) => m.ProductEdit),
+        ),
+        canDeactivate: [unsavedChangesGuard],
+      },
       page('customers', 'Customers', () =>
         import('./features/customers/customers').then((m) => m.Customers),
       ),

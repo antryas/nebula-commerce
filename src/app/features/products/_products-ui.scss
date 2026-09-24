@@ -1,0 +1,198 @@
+// Controls shared by the products list and the product editor (feature-local on purpose).
+// Exposed as mixins so each component only pays for what it uses (component style budget).
+
+@mixin buttons {
+  .nb-btn {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    height: 2.5rem;
+    padding: 0 1rem;
+    border: 1px solid var(--nb-border);
+    border-radius: 0.75rem;
+    font: inherit;
+    font-size: 0.875rem;
+    font-weight: 600;
+    white-space: nowrap;
+    text-decoration: none;
+    color: var(--nb-text);
+    background: var(--nb-card);
+    cursor: pointer;
+    transition:
+      transform 150ms ease,
+      border-color 150ms ease,
+      background-color 150ms ease,
+      box-shadow 150ms ease,
+      opacity 150ms ease;
+
+    &:hover:not(:disabled) {
+      border-color: color-mix(in srgb, var(--nb-accent-1) 55%, var(--nb-border));
+      background: color-mix(in srgb, var(--nb-accent-1) 8%, var(--nb-card));
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--nb-accent-2);
+      outline-offset: 2px;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .material-symbols-rounded {
+      width: 1.25rem;
+      overflow: hidden;
+      font-size: 1.25rem;
+    }
+  }
+
+  .nb-btn--primary {
+    border-color: transparent;
+    color: #fff;
+    background: linear-gradient(
+      135deg,
+      var(--nb-accent-1),
+      color-mix(in srgb, var(--nb-accent-2) 80%, var(--nb-accent-1))
+    );
+    box-shadow: 0 10px 24px -12px var(--nb-accent-1);
+
+    &:hover:not(:disabled) {
+      border-color: transparent;
+      background: linear-gradient(135deg, var(--nb-accent-1), var(--nb-accent-2));
+      box-shadow: 0 14px 30px -12px var(--nb-accent-1);
+      transform: translateY(-1px);
+    }
+  }
+
+  .nb-btn--ghost {
+    border-color: transparent;
+    background: transparent;
+  }
+}
+
+@mixin controls {
+  .nb-control {
+    width: 100%;
+    min-width: 0;
+    height: 2.625rem;
+    padding: 0 0.875rem;
+    border: 1px solid color-mix(in srgb, var(--nb-muted) 35%, var(--nb-border));
+    border-radius: 0.75rem;
+    font: inherit;
+    font-size: 0.875rem;
+    color: var(--nb-text);
+    background: color-mix(in srgb, var(--nb-bg) 55%, transparent);
+    transition:
+      border-color 150ms ease,
+      box-shadow 150ms ease;
+
+    &::placeholder {
+      color: color-mix(in srgb, var(--nb-muted) 80%, transparent);
+    }
+
+    &:focus {
+      outline: none;
+      border-color: var(--nb-accent-1);
+      box-shadow: 0 0 0 4px color-mix(in srgb, var(--nb-accent-1) 18%, transparent);
+    }
+
+    &:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
+    &[aria-invalid='true'] {
+      border-color: var(--nb-danger);
+      box-shadow: 0 0 0 4px color-mix(in srgb, var(--nb-danger) 14%, transparent);
+    }
+  }
+
+  select.nb-control {
+    padding-right: 2.25rem;
+    appearance: none;
+    background-image:
+      linear-gradient(45deg, transparent 50%, var(--nb-muted) 50%),
+      linear-gradient(135deg, var(--nb-muted) 50%, transparent 50%);
+    background-position:
+      right 1.125rem center,
+      right 0.8125rem center;
+    background-size: 0.3125rem 0.3125rem;
+    background-repeat: no-repeat;
+    cursor: pointer;
+
+    option {
+      color: var(--nb-text);
+      background: var(--nb-card);
+    }
+  }
+}
+
+@mixin segmented {
+  .nb-segmented {
+    display: inline-flex;
+    gap: 0.25rem;
+    padding: 0.25rem;
+    border: 1px solid var(--nb-border);
+    border-radius: 0.875rem;
+    background: color-mix(in srgb, var(--nb-bg) 55%, transparent);
+
+    button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.375rem;
+      height: 2rem;
+      padding: 0 0.75rem;
+      border: 0;
+      border-radius: 0.625rem;
+      font: inherit;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      white-space: nowrap;
+      color: var(--nb-muted);
+      background: transparent;
+      cursor: pointer;
+      transition:
+        color 150ms ease,
+        background-color 150ms ease,
+        box-shadow 150ms ease;
+
+      &:hover {
+        color: var(--nb-text);
+      }
+
+      &:focus-visible {
+        outline: 2px solid var(--nb-accent-2);
+        outline-offset: 1px;
+      }
+
+      &[aria-pressed='true'] {
+        color: var(--nb-text);
+        background: var(--nb-card);
+        box-shadow:
+          0 0 0 1px color-mix(in srgb, var(--nb-accent-1) 45%, transparent),
+          0 6px 16px -10px var(--nb-accent-1);
+      }
+
+      .material-symbols-rounded {
+        width: 1.125rem;
+        overflow: hidden;
+        font-size: 1.125rem;
+      }
+    }
+  }
+}
+
+@mixin dot {
+  .nb-dot {
+    display: inline-block;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 9999px;
+    background: var(--nb-dot, var(--nb-success));
+    box-shadow: 0 0 8px var(--nb-dot, var(--nb-success));
+  }
+}
