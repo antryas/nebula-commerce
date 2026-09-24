@@ -1,4 +1,12 @@
-import { ACCENTS, baseOption, chartPalette, donutOption, revenueAreaOption } from './chart-theme';
+import {
+  ACCENTS,
+  baseOption,
+  chartPalette,
+  donutOption,
+  mix,
+  revenueAreaOption,
+  withAlpha,
+} from './chart-theme';
 
 // Option objects are deeply nested unions; tests only poke at known paths.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -24,6 +32,18 @@ describe('chartPalette', () => {
       expect(p.series.length).toBeGreaterThanOrEqual(6);
       expect(new Set(p.series).size).toBe(p.series.length);
     }
+  });
+});
+
+describe('color helpers', () => {
+  it('adds alpha to a hex color', () => {
+    expect(withAlpha('#8b5cf6', 0.45)).toBe('rgba(139,92,246,0.45)');
+  });
+
+  it('blends two hex colors', () => {
+    expect(mix('#000000', '#ffffff', 0)).toBe('#000000');
+    expect(mix('#000000', '#ffffff', 1)).toBe('#ffffff');
+    expect(mix('#000000', '#ffffff', 0.5)).toBe('#808080');
   });
 });
 

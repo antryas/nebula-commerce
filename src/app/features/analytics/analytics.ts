@@ -13,6 +13,7 @@ import { AnalyticsApi } from '../../core/api/analytics-api';
 import { toApiError } from '../../core/http/api-error';
 import { ThemeService } from '../../core/theme/theme.service';
 import { ApiError, RevenueRange } from '../../models';
+import { injectChartPalette } from '../../shared/charts/chart-theme';
 import { CompactCurrencyPipe } from '../../shared/pipes/compact-currency';
 import { Stagger } from '../../shared/directives/stagger';
 import { ErrorState } from '../../shared/ui/error-state';
@@ -20,13 +21,7 @@ import { GlassCard } from '../../shared/ui/glass-card';
 import { PageHeader } from '../../shared/ui/page-header';
 import { Skeleton } from '../../shared/ui/skeleton';
 import { CountryFlag } from '../customers/country-flag';
-import {
-  analyticsPalette,
-  funnelOption,
-  geoOption,
-  heatmapOption,
-  revenueOption,
-} from './analytics-options';
+import { funnelOption, geoOption, heatmapOption, revenueOption } from './analytics-options';
 import { loadWorldMap } from './world-map';
 import { NbCurrencyPipe, NbDecimalPipe } from '../../shared/pipes/intl-format';
 
@@ -89,9 +84,7 @@ export class Analytics {
   protected readonly mapReady = signal(false);
   protected readonly mapFailed = signal(false);
 
-  private readonly palette = computed(() =>
-    analyticsPalette(this.theme.mode(), this.theme.accent()),
-  );
+  private readonly palette = injectChartPalette();
 
   protected readonly revenueChart = computed(() =>
     this.chart(

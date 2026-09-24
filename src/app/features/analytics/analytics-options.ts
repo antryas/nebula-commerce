@@ -1,37 +1,6 @@
 import type { EChartsOption } from 'echarts';
-import type { AccentName, ThemeMode } from '../../core/theme/theme.service';
 import { FunnelStep, GeoSales, HeatCell, TimePoint } from '../../models';
-
-/**
- * Colors the analytics charts are drawn with. Mirrors the CSS design tokens because
- * ECharts renders to canvas and cannot read CSS custom properties.
- */
-export interface AnalyticsPalette {
-  text: string;
-  muted: string;
-  grid: string;
-  card: string;
-  accent1: string;
-  accent2: string;
-  series: string[];
-}
-
-const ACCENT_PAIRS: Record<AccentName, readonly [string, string]> = {
-  violet: ['#8b5cf6', '#22d3ee'],
-  cyan: ['#06b6d4', '#3b82f6'],
-  rose: ['#f43f5e', '#f59e0b'],
-  amber: ['#f59e0b', '#ef4444'],
-};
-
-const BASE: Record<ThemeMode, Pick<AnalyticsPalette, 'text' | 'muted' | 'grid' | 'card'>> = {
-  dark: { text: '#e5e7eb', muted: '#94a3b8', grid: '#232b40', card: '#151b2d' },
-  light: { text: '#0f172a', muted: '#64748b', grid: '#e2e8f0', card: '#ffffff' },
-};
-
-export function analyticsPalette(mode: ThemeMode, accent: AccentName): AnalyticsPalette {
-  const [accent1, accent2] = ACCENT_PAIRS[accent];
-  return { ...BASE[mode], accent1, accent2, series: [accent1, accent2, '#ec4899', '#34d399'] };
-}
+import { ChartPalette, mix, withAlpha } from '../../shared/charts/chart-theme';
 
 /**
  * Natural Earth names for seed countries whose display name differs from the map's
@@ -63,30 +32,6 @@ const dayLabel = new Intl.DateTimeFormat('en-US', {
 });
 const monthLabel = new Intl.DateTimeFormat('en-US', { month: 'short', timeZone: 'UTC' });
 
-/** Hex `#rrggbb` → `rgba()` with the given alpha. */
-export function withAlpha(hex: string, alpha: number): string {
-  const [r, g, b] = rgb(hex);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
-
-/** Linear blend of two hex colors (`t` = 0 → `a`, 1 → `b`). */
-export function mix(a: string, b: string, t: number): string {
-  const ca = rgb(a);
-  const cb = rgb(b);
-  return `#${ca
-    .map((v, i) =>
-      Math.round(v + (cb[i] - v) * t)
-        .toString(16)
-        .padStart(2, '0'),
-    )
-    .join('')}`;
-}
-
-function rgb(hex: string): [number, number, number] {
-  const n = Number.parseInt(hex.slice(1), 16);
-  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
-}
-
 function linear(horizontal: boolean, stops: readonly string[]) {
   return {
     type: 'linear' as const,
@@ -98,7 +43,7 @@ function linear(horizontal: boolean, stops: readonly string[]) {
   };
 }
 
-function tooltip(p: AnalyticsPalette) {
+function tooltip(p: ChartPalette) {
   return {
     backgroundColor: withAlpha(p.card, 0.94),
     borderColor: p.grid,
@@ -109,7 +54,7 @@ function tooltip(p: AnalyticsPalette) {
   };
 }
 
-function base(p: AnalyticsPalette): EChartsOption {
+function base(p: ChartPalette): EChartsOption {
   return {
     backgroundColor: 'transparent',
     color: p.series,
@@ -129,7 +74,7 @@ interface TooltipParam {
 }
 
 /** Orders by weekday (rows, Monday on top) and hour of day (columns). */
-export function heatmapOption(cells: readonly HeatCell[], p: AnalyticsPalette): EChartsOption {
+export function heatmapOption(cells: readonly HeatCell[], p: ChartPalette): EChartsOption {
   const max = Math.max(1, ...cells.map((c) => c.orders));
   return {
     ...base(p),
@@ -190,7 +135,7 @@ export function heatmapOption(cells: readonly HeatCell[], p: AnalyticsPalette): 
 }
 
 /** Revenue choropleth on the `world` map registered from `geo/world.json`. */
-export function geoOption(data: readonly GeoSales[], p: AnalyticsPalette): EChartsOption {
+export function geoOption(data: readonly GeoSales[], p: ChartPalette): EChartsOption {
   const land = mix(p.card, p.text, 0.07);
   const max = Math.max(1, ...data.map((d) => d.revenue));
   return {
@@ -251,7 +196,7 @@ export function geoOption(data: readonly GeoSales[], p: AnalyticsPalette): EChar
 }
 
 /** Visits → paid funnel; steps keep the order the API returns them in. */
-export function funnelOption(steps: readonly FunnelStep[], p: AnalyticsPalette): EChartsOption {
+export function funnelOption(steps: readonly FunnelStep[], p: ChartPalette): EChartsOption {
   const first = steps[0]?.value || 1;
   const pct = (v: number) => `${((v / first) * 100).toFixed(v / first < 0.1 ? 1 : 0)}%`;
   const last = Math.max(1, steps.length - 1);
@@ -311,7 +256,7 @@ export function funnelOption(steps: readonly FunnelStep[], p: AnalyticsPalette):
 }
 
 /** Revenue as a glowing area with orders as faint bars on a secondary axis. */
-export function revenueOption(points: readonly TimePoint[], p: AnalyticsPalette): EChartsOption {
+export function revenueOption(points: readonly TimePoint[], p: ChartPalette): EChartsOption {
   const monthly = points.length > 1 && points.every((pt) => pt.date.endsWith('-01'));
   const label = (d: string) => (monthly ? monthLabel : dayLabel).format(new Date(`${d}T00:00:00Z`));
   return {

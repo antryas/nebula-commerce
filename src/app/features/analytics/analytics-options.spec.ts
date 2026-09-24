@@ -1,25 +1,15 @@
 import {
   GEO_NAME_BY_CODE,
-  analyticsPalette,
   funnelOption,
   geoOption,
   heatmapOption,
   revenueOption,
 } from './analytics-options';
+import { chartPalette } from '../../shared/charts/chart-theme';
 
 /* eslint-disable @typescript-eslint/no-explicit-any -- inspecting loosely typed ECharts options */
 describe('analytics options', () => {
-  const p = analyticsPalette('dark', 'violet');
-
-  it('builds the palette from the theme mode and accent preset', () => {
-    expect(p.accent1).toBe('#8b5cf6');
-    expect(p.accent2).toBe('#22d3ee');
-    expect(p.card).toBe('#151b2d');
-    const light = analyticsPalette('light', 'rose');
-    expect(light.accent1).toBe('#f43f5e');
-    expect(light.text).toBe('#0f172a');
-    expect(light.series[0]).toBe('#f43f5e');
-  });
+  const p = chartPalette('dark', 'violet');
 
   it('heatmap maps weekday and hour to axes', () => {
     const o = heatmapOption([{ weekday: 0, hour: 18, orders: 7 }], p) as any;

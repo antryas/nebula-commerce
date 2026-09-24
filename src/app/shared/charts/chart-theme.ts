@@ -55,8 +55,26 @@ export function injectChartPalette(): Signal<ChartPalette> {
 
 /** `#8b5cf6` + 0.45 → `rgba(139,92,246,0.45)`. */
 export function withAlpha(hex: string, alpha: number): string {
-  const n = parseInt(hex.slice(1), 16);
-  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${alpha})`;
+  const [r, g, b] = rgb(hex);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+/** Linear blend of two hex colors (`t` = 0 → `a`, 1 → `b`), e.g. for heatmap ramps. */
+export function mix(a: string, b: string, t: number): string {
+  const ca = rgb(a);
+  const cb = rgb(b);
+  return `#${ca
+    .map((v, i) =>
+      Math.round(v + (cb[i] - v) * t)
+        .toString(16)
+        .padStart(2, '0'),
+    )
+    .join('')}`;
+}
+
+function rgb(hex: string): [number, number, number] {
+  const n = Number.parseInt(hex.slice(1), 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
 }
 
 const FONT = 'Inter, system-ui, sans-serif';
