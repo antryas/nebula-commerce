@@ -1,4 +1,3 @@
-import { CurrencyPipe, DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
@@ -13,6 +12,7 @@ import { ConfirmService } from './confirm.service';
 import { ProductCard, stockLabel, stockLevel } from './product-card';
 import { PRODUCT_CATEGORIES } from './product-form';
 import { ProductsStore, ProductsView } from './products.store';
+import { NbCurrencyPipe, NbDecimalPipe } from '../../shared/pipes/intl-format';
 
 interface SortOption {
   value: string;
@@ -40,8 +40,8 @@ const STOCK_FILTERS: readonly { value: StockFilter; label: string }[] = [
 @Component({
   selector: 'nb-products-page',
   imports: [
-    CurrencyPipe,
-    DecimalPipe,
+    NbCurrencyPipe,
+    NbDecimalPipe,
     EmptyState,
     ErrorState,
     GlassCard,

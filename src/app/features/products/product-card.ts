@@ -1,4 +1,3 @@
-import { CurrencyPipe } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -11,6 +10,7 @@ import {
 import { MatMenuModule } from '@angular/material/menu';
 import { RouterLink } from '@angular/router';
 import { ProductCategory } from '../../models';
+import { NbCurrencyPipe } from '../../shared/pipes/intl-format';
 
 /** Units at which the stock bar is drawn full. */
 const STOCK_BAR_FULL = 60;
@@ -44,7 +44,7 @@ export function stockLabel(stock: number): string {
 /** Catalog tile: image with hover zoom, category, price, rating and a stock level bar. */
 @Component({
   selector: 'nb-product-card',
-  imports: [CurrencyPipe, MatMenuModule, RouterLink],
+  imports: [NbCurrencyPipe, MatMenuModule, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
   templateUrl: './product-card.html',

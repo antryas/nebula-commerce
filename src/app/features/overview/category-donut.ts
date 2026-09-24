@@ -1,4 +1,3 @@
-import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { NgxEchartsDirective } from 'ngx-echarts';
@@ -9,11 +8,19 @@ import { ErrorState } from '../../shared/ui/error-state';
 import { GlassCard } from '../../shared/ui/glass-card';
 import { Skeleton } from '../../shared/ui/skeleton';
 import { resourceError } from './resource-error';
+import { NbDecimalPipe } from '../../shared/pipes/intl-format';
 
 /** Revenue split by product category (last 30 days) as a rounded donut with a legend. */
 @Component({
   selector: 'nb-category-donut',
-  imports: [CompactCurrencyPipe, DecimalPipe, ErrorState, GlassCard, NgxEchartsDirective, Skeleton],
+  imports: [
+    CompactCurrencyPipe,
+    NbDecimalPipe,
+    ErrorState,
+    GlassCard,
+    NgxEchartsDirective,
+    Skeleton,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <nb-glass-card class="nb-card">

@@ -10,7 +10,6 @@ import {
   withComponentInputBinding,
   withViewTransitions,
 } from '@angular/router';
-import { provideEchartsCore } from 'ngx-echarts';
 import { environment } from '../environments/environment';
 import { routes } from './app.routes';
 import { errorInterceptor } from './core/http/error.interceptor';
@@ -32,7 +31,5 @@ export const appConfig: ApplicationConfig = {
       withFetch(),
       withInterceptors([errorInterceptor, ...(environment.useMockApi ? [mockApiInterceptor] : [])]),
     ),
-    // ECharts itself is fetched on demand by the first chart, keeping it out of the initial bundle.
-    provideEchartsCore({ echarts: () => import('echarts') }),
   ],
 };

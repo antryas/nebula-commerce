@@ -1,4 +1,3 @@
-import { CurrencyPipe, DecimalPipe } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -18,6 +17,7 @@ import { ErrorState } from '../../shared/ui/error-state';
 import { GlassCard } from '../../shared/ui/glass-card';
 import { Skeleton } from '../../shared/ui/skeleton';
 import { resourceError } from './resource-error';
+import { NbCurrencyPipe, NbDecimalPipe } from '../../shared/pipes/intl-format';
 
 interface RangeSeries {
   range: RevenueRange;
@@ -35,8 +35,8 @@ const RANGES: { value: RevenueRange; label: string; caption: string }[] = [
 @Component({
   selector: 'nb-revenue-chart',
   imports: [
-    CurrencyPipe,
-    DecimalPipe,
+    NbCurrencyPipe,
+    NbDecimalPipe,
     ErrorState,
     GlassCard,
     MatButtonToggleModule,

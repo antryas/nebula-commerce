@@ -7,7 +7,6 @@ import {
   signal,
 } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
-import { CurrencyPipe, DecimalPipe } from '@angular/common';
 import type { EChartsOption } from 'echarts';
 import { NgxEchartsDirective } from 'ngx-echarts';
 import { AnalyticsApi } from '../../core/api/analytics-api';
@@ -29,6 +28,7 @@ import {
   revenueOption,
 } from './analytics-options';
 import { loadWorldMap } from './world-map';
+import { NbCurrencyPipe, NbDecimalPipe } from '../../shared/pipes/intl-format';
 
 export const ANALYTICS_RANGES: readonly { value: RevenueRange; label: string }[] = [
   { value: '30d', label: '30 days' },
@@ -48,8 +48,8 @@ function apiErrorOf(e: Error | undefined): ApiError | null {
   imports: [
     CompactCurrencyPipe,
     CountryFlag,
-    CurrencyPipe,
-    DecimalPipe,
+    NbCurrencyPipe,
+    NbDecimalPipe,
     ErrorState,
     GlassCard,
     NgxEchartsDirective,

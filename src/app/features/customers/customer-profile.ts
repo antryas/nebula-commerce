@@ -7,7 +7,6 @@ import {
   linkedSignal,
 } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
-import { CurrencyPipe, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { CustomersApi } from '../../core/api/customers-api';
 import { toApiError } from '../../core/http/api-error';
@@ -21,6 +20,7 @@ import { GlassCard } from '../../shared/ui/glass-card';
 import { Skeleton } from '../../shared/ui/skeleton';
 import { StatusChip } from '../../shared/ui/status-chip';
 import { CountryFlag } from './country-flag';
+import { NbCurrencyPipe, NbDatePipe } from '../../shared/pipes/intl-format';
 
 const NOTES_KEY = 'nebula.notes.';
 
@@ -51,8 +51,8 @@ function writeNotes(id: string, notes: string): void {
     Avatar,
     CountUp,
     CountryFlag,
-    CurrencyPipe,
-    DatePipe,
+    NbCurrencyPipe,
+    NbDatePipe,
     ErrorState,
     GlassCard,
     RouterLink,

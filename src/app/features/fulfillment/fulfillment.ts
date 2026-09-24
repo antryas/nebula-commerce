@@ -1,7 +1,6 @@
 import { LiveAnnouncer } from '@angular/cdk/a11y';
 import { CdkDrag, CdkDragDrop, CdkDropList, CdkDropListGroup } from '@angular/cdk/drag-drop';
 import { CdkScrollable } from '@angular/cdk/scrolling';
-import { CurrencyPipe } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -27,6 +26,7 @@ import {
   FulfillmentStore,
   nextStatus,
 } from './fulfillment.store';
+import { NbCurrencyPipe } from '../../shared/pipes/intl-format';
 
 /** Touch needs a long-press so a swipe still scrolls the board horizontally. */
 const DRAG_START_DELAY = { touch: 220, mouse: 0 };
@@ -41,7 +41,7 @@ const DRAG_START_DELAY = { touch: 220, mouse: 0 };
     CdkDropListGroup,
     CdkScrollable,
     CompactCurrencyPipe,
-    CurrencyPipe,
+    NbCurrencyPipe,
     ErrorState,
     GlassCard,
     GradientBorder,

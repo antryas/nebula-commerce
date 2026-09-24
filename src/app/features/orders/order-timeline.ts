@@ -1,14 +1,14 @@
-import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { STATUS_META } from '../../shared/ui/status-chip';
 import { TimelineStep } from './order-format';
+import { NbDatePipe } from '../../shared/pipes/intl-format';
 
 const STATE_LABEL = { done: 'Completed', current: 'Current status', upcoming: 'Pending' };
 
 /** Vertical status history with glowing dots; upcoming steps are dimmed. */
 @Component({
   selector: 'nb-order-timeline',
-  imports: [DatePipe],
+  imports: [NbDatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <ol class="nb-timeline">

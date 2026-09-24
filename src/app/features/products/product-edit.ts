@@ -1,4 +1,3 @@
-import { CurrencyPipe } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -44,6 +43,7 @@ import {
   toProductInput,
 } from './product-form';
 import { HasUnsavedChanges } from './unsaved-changes.guard';
+import { NbCurrencyPipe } from '../../shared/pipes/intl-format';
 
 type LoadState = 'loading' | 'ready' | 'error';
 
@@ -51,7 +51,7 @@ type LoadState = 'loading' | 'ready' | 'error';
 @Component({
   selector: 'nb-product-edit-page',
   imports: [
-    CurrencyPipe,
+    NbCurrencyPipe,
     EmptyState,
     ErrorState,
     GlassCard,

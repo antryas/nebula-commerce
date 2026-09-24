@@ -1,4 +1,3 @@
-import { CurrencyPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { RouterLink } from '@angular/router';
@@ -9,13 +8,14 @@ import { StatusChip } from '../../shared/ui/status-chip';
 import { PAYMENT_META, itemCount } from './order-format';
 import { OrderRowMenu } from './order-row-menu';
 import { OrdersStore } from './orders.store';
+import { NbCurrencyPipe } from '../../shared/pipes/intl-format';
 
 /** Compact card list used instead of the table on narrow screens. */
 @Component({
   selector: 'nb-order-cards',
   imports: [
     Avatar,
-    CurrencyPipe,
+    NbCurrencyPipe,
     MatCheckboxModule,
     OrderRowMenu,
     RelativeTimePipe,

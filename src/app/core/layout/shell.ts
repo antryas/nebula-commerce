@@ -12,6 +12,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs';
+import { provideCharts } from '../../shared/charts/provide-charts';
 import { LiveOrdersService } from '../live/live-orders.service';
 import { Sidebar } from './sidebar';
 import { Topbar } from './topbar';
@@ -22,6 +23,8 @@ const SIDEBAR_KEY = 'nebula.sidebar';
 @Component({
   selector: 'nb-shell',
   imports: [RouterOutlet, Sidebar, Topbar],
+  // Chart config lives here rather than in app.config.ts to keep ngx-echarts lazy.
+  providers: [provideCharts()],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     class: 'nb-shell',

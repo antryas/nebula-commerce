@@ -1,4 +1,3 @@
-import { CurrencyPipe, DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { MatMenuModule } from '@angular/material/menu';
@@ -18,6 +17,7 @@ import { STATUS_META, StatusChip } from '../../shared/ui/status-chip';
 import { Stagger } from '../../shared/directives/stagger';
 import { PAYMENT_META, buildTimeline, flagEmoji, itemCount, statusTargets } from './order-format';
 import { OrderTimeline } from './order-timeline';
+import { NbCurrencyPipe, NbDatePipe } from '../../shared/pipes/intl-format';
 
 type LoadState =
   | { kind: 'loading' }
@@ -30,8 +30,8 @@ type LoadState =
   selector: 'nb-order-details-page',
   imports: [
     Avatar,
-    CurrencyPipe,
-    DatePipe,
+    NbCurrencyPipe,
+    NbDatePipe,
     EmptyState,
     ErrorState,
     GlassCard,

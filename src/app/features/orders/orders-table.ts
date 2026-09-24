@@ -1,4 +1,3 @@
-import { CurrencyPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatSortModule, Sort } from '@angular/material/sort';
@@ -11,13 +10,14 @@ import { StatusChip } from '../../shared/ui/status-chip';
 import { PAYMENT_META, itemCount } from './order-format';
 import { OrderRowMenu } from './order-row-menu';
 import { OrdersStore } from './orders.store';
+import { NbCurrencyPipe } from '../../shared/pipes/intl-format';
 
 /** Desktop orders table: sortable Material table with sticky header and row selection. */
 @Component({
   selector: 'nb-orders-table',
   imports: [
     Avatar,
-    CurrencyPipe,
+    NbCurrencyPipe,
     MatCheckboxModule,
     MatSortModule,
     MatTableModule,

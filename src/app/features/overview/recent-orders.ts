@@ -1,4 +1,3 @@
-import { CurrencyPipe } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -21,6 +20,7 @@ import { GlassCard } from '../../shared/ui/glass-card';
 import { Skeleton } from '../../shared/ui/skeleton';
 import { StatusChip } from '../../shared/ui/status-chip';
 import { resourceError } from './resource-error';
+import { NbCurrencyPipe } from '../../shared/pipes/intl-format';
 
 const LIMIT = 6;
 const CLOCK_MS = 30_000;
@@ -30,7 +30,7 @@ const CLOCK_MS = 30_000;
   selector: 'nb-recent-orders',
   imports: [
     Avatar,
-    CurrencyPipe,
+    NbCurrencyPipe,
     ErrorState,
     GlassCard,
     RelativeTimePipe,

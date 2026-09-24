@@ -1,4 +1,3 @@
-import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
@@ -8,11 +7,12 @@ import { ErrorState } from '../../shared/ui/error-state';
 import { GlassCard } from '../../shared/ui/glass-card';
 import { Skeleton } from '../../shared/ui/skeleton';
 import { resourceError } from './resource-error';
+import { NbDecimalPipe } from '../../shared/pipes/intl-format';
 
 /** Best sellers of the last 30 days with revenue share bars. */
 @Component({
   selector: 'nb-top-products',
-  imports: [CompactCurrencyPipe, DecimalPipe, ErrorState, GlassCard, RouterLink, Skeleton],
+  imports: [CompactCurrencyPipe, NbDecimalPipe, ErrorState, GlassCard, RouterLink, Skeleton],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <nb-glass-card class="nb-card">

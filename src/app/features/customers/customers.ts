@@ -7,7 +7,6 @@ import {
   signal,
 } from '@angular/core';
 import { rxResource, toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { CurrencyPipe, DatePipe } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { debounceTime, distinctUntilChanged, map } from 'rxjs';
 import { CustomersApi } from '../../core/api/customers-api';
@@ -21,6 +20,7 @@ import { GlassCard } from '../../shared/ui/glass-card';
 import { PageHeader } from '../../shared/ui/page-header';
 import { Skeleton } from '../../shared/ui/skeleton';
 import { CountryFlag } from './country-flag';
+import { NbCurrencyPipe, NbDatePipe } from '../../shared/pipes/intl-format';
 
 export type CustomerSort = 'ordersCount' | 'lifetimeValue' | 'lastOrderAt';
 
@@ -36,8 +36,8 @@ function apiErrorOf(e: Error | undefined): ApiError | null {
   imports: [
     Avatar,
     CountryFlag,
-    CurrencyPipe,
-    DatePipe,
+    NbCurrencyPipe,
+    NbDatePipe,
     EmptyState,
     ErrorState,
     GlassCard,
