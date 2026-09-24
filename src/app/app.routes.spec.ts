@@ -20,7 +20,13 @@ async function setup(authenticated: boolean) {
       },
       {
         provide: LiveOrdersService,
-        useValue: { enabled: signal(false), count: signal(0), start: vi.fn(), stop: vi.fn() },
+        useValue: {
+          enabled: signal(false),
+          count: signal(0),
+          latest: signal(null),
+          start: vi.fn(),
+          stop: vi.fn(),
+        },
       },
     ],
   });
