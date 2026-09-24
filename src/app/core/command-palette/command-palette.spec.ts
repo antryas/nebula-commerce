@@ -6,6 +6,7 @@ import {
   provideHttpClientTesting,
 } from '@angular/common/http/testing';
 import { Router, provideRouter } from '@angular/router';
+import { BackendSwitch } from '../api/backend-switch';
 import { CommandPalette } from './command-palette';
 
 async function setup() {
@@ -101,5 +102,18 @@ describe('CommandPalette', () => {
     byUrl('/api/customers').flush({ items: [], total: 0, page: 1, pageSize: 5 });
     await fixture.whenStable();
     expect(labels()).toContain('Order #1042');
+  });
+
+  it('offers switching to the live .NET backend', async () => {
+    const { type, key, labels } = await setup();
+    const switchTo = vi
+      .spyOn(TestBed.inject(BackendSwitch), 'switchTo')
+      .mockImplementation(() => undefined);
+    expect(labels()).toContain('Use live .NET backend');
+    expect(labels()).not.toContain('Use mock data');
+    await type('live .net');
+    expect(labels()[0]).toBe('Use live .NET backend');
+    await key('Enter');
+    expect(switchTo).toHaveBeenCalledWith('live');
   });
 });

@@ -1,6 +1,8 @@
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import {
   ApplicationConfig,
+  inject,
+  provideAppInitializer,
   provideBrowserGlobalErrorListeners,
   provideZonelessChangeDetection,
 } from '@angular/core';
@@ -11,6 +13,7 @@ import {
   withViewTransitions,
 } from '@angular/router';
 import { routes } from './app.routes';
+import { BackendSwitch } from './core/api/backend-switch';
 import { authInterceptor } from './core/http/auth.interceptor';
 import { errorInterceptor } from './core/http/error.interceptor';
 import { NebulaTitleStrategy } from './core/layout/title-strategy';
@@ -32,5 +35,8 @@ export const appConfig: ApplicationConfig = {
       withFetch(),
       withInterceptors([errorInterceptor, authInterceptor, mockApiInterceptor]),
     ),
+    // A persisted live choice is verified before the first route loads its data, so an
+    // unreachable API degrades to the mock instead of rendering error states.
+    provideAppInitializer(() => inject(BackendSwitch).fallBackIfOffline()),
   ],
 };

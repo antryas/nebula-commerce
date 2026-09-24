@@ -1,10 +1,21 @@
-import { ChangeDetectionStrategy, Component, DOCUMENT, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DOCUMENT,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { finalize, map, startWith } from 'rxjs';
+import { ApiConfigService } from '../../core/api/api-config.service';
+import { BackendStatusService } from '../../core/api/backend-status.service';
+import { BackendSwitch } from '../../core/api/backend-switch';
 import { DemoApi } from '../../core/api/demo-api';
 import { APP_NAME, APP_VERSION, REPO_URL } from '../../core/app-info';
 import { AuthService } from '../../core/auth/auth.service';
+import { backendStatusText } from '../../core/layout/backend-indicator';
 import { LiveOrdersService } from '../../core/live/live-orders.service';
 import { ToastService } from '../../core/notifications/toast.service';
 import { AccentName, ThemeMode, ThemeService } from '../../core/theme/theme.service';
@@ -51,6 +62,9 @@ export class Settings {
   private readonly doc = inject(DOCUMENT);
   protected readonly theme = inject(ThemeService);
   protected readonly live = inject(LiveOrdersService);
+  private readonly apiConfig = inject(ApiConfigService);
+  private readonly backendSwitch = inject(BackendSwitch);
+  protected readonly backend = inject(BackendStatusService);
 
   protected readonly accents = ACCENT_PRESETS;
   protected readonly modes = MODES;
@@ -77,6 +91,12 @@ export class Settings {
 
   protected readonly resetting = signal(false);
 
+  protected readonly isLiveBackend = computed(() => this.apiConfig.mode() === 'live');
+  protected readonly backendText = computed(() =>
+    backendStatusText(this.backend.status(), this.backend.latencyMs()),
+  );
+  protected readonly apiDocsUrl = `${this.apiConfig.liveOrigin}/swagger`;
+
   protected saveProfile(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -101,6 +121,10 @@ export class Settings {
 
   protected toggleLive(): void {
     this.live.enabled.update((on) => !on);
+  }
+
+  protected toggleBackend(): void {
+    this.backendSwitch.switchTo(this.isLiveBackend() ? 'mock' : 'live');
   }
 
   protected resetDemo(): void {

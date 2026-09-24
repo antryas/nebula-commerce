@@ -8,6 +8,7 @@ import { AuthService } from '../auth/auth.service';
 import { CommandPaletteService } from '../command-palette/command-palette.service';
 import { LiveOrdersService } from '../live/live-orders.service';
 import { ThemeService } from '../theme/theme.service';
+import { BackendIndicator } from './backend-indicator';
 
 /** Title of the deepest active route (`data.title`). */
 function pageTitle(router: Router): string {
@@ -20,10 +21,13 @@ function pageTitle(router: Router): string {
   return title;
 }
 
-/** Sticky header: page title, palette trigger, live feed switch, theme toggle, user menu. */
+/**
+ * Sticky header: page title, palette trigger, data source, live feed switch, theme toggle and
+ * user menu.
+ */
 @Component({
   selector: 'nb-topbar',
-  imports: [Avatar, MatMenuModule, RouterLink],
+  imports: [Avatar, BackendIndicator, MatMenuModule, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <button
@@ -48,6 +52,8 @@ function pageTitle(router: Router): string {
     </button>
 
     <div class="nb-topbar__actions">
+      <nb-backend-indicator />
+
       <button
         type="button"
         class="nb-live"

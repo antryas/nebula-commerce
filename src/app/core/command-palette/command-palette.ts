@@ -24,6 +24,8 @@ import { Router } from '@angular/router';
 import { Observable, catchError, debounceTime, forkJoin, map, of, switchMap, tap } from 'rxjs';
 import { Customer, Order, Paged, Product } from '../../models';
 import { GradientBorder } from '../../shared/ui/gradient-border';
+import { ApiConfigService } from '../api/api-config.service';
+import { BackendSwitch } from '../api/backend-switch';
 import { CustomersApi } from '../api/customers-api';
 import { OrdersApi } from '../api/orders-api';
 import { ProductsApi } from '../api/products-api';
@@ -370,6 +372,8 @@ export class CommandPalette {
   private readonly theme = inject(ThemeService);
   private readonly live = inject(LiveOrdersService);
   private readonly auth = inject(AuthService);
+  private readonly apiConfig = inject(ApiConfigService);
+  private readonly backendSwitch = inject(BackendSwitch);
   private readonly ordersApi = inject(OrdersApi);
   private readonly productsApi = inject(ProductsApi);
   private readonly customersApi = inject(CustomersApi);
@@ -404,6 +408,23 @@ export class CommandPalette {
       icon: this.live.enabled() ? 'pause_circle' : 'play_circle',
       run: () => this.live.enabled.update((v) => !v),
     },
+    this.apiConfig.mode() === 'live'
+      ? {
+          id: 'action:backend',
+          group: 'Actions',
+          label: 'Use mock data',
+          hint: 'Switch to the in-browser mock API and sign out',
+          icon: 'cloud_off',
+          run: () => this.backendSwitch.switchTo('mock'),
+        }
+      : {
+          id: 'action:backend',
+          group: 'Actions',
+          label: 'Use live .NET backend',
+          hint: 'Switch to the ASP.NET Core API and sign out',
+          icon: 'dns',
+          run: () => this.backendSwitch.switchTo('live'),
+        },
     {
       id: 'action:new-product',
       group: 'Actions',

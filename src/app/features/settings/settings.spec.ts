@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { BackendSwitch } from '../../core/api/backend-switch';
 import { AuthService } from '../../core/auth/auth.service';
 import { LiveOrdersService } from '../../core/live/live-orders.service';
 import { ToastService } from '../../core/notifications/toast.service';
@@ -71,9 +72,23 @@ describe('Settings', () => {
 
   it('toggles live orders', async () => {
     const { el, live, fixture } = await setup();
-    el.querySelector<HTMLButtonElement>('[role="switch"]')!.click();
+    el.querySelector<HTMLButtonElement>(
+      '[role="switch"][aria-labelledby="nb-live-label"]',
+    )!.click();
     await fixture.whenStable();
     expect(live.enabled()).toBe(false);
+  });
+
+  it('the data source switch selects the live .NET backend', async () => {
+    const { el } = await setup();
+    const switchTo = vi
+      .spyOn(TestBed.inject(BackendSwitch), 'switchTo')
+      .mockImplementation(() => undefined);
+    const toggle = el.querySelector<HTMLButtonElement>('[aria-labelledby="nb-backend-label"]')!;
+    expect(toggle.getAttribute('aria-checked')).toBe('false');
+    expect(el.textContent).toContain('In-browser mock API');
+    toggle.click();
+    expect(switchTo).toHaveBeenCalledWith('live');
   });
 
   it('"Reset demo data" after confirm sends POST /api/demo/reset and toasts', async () => {

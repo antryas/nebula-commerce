@@ -180,13 +180,65 @@
     </div>
   </nb-glass-card>
 
-  <!-- About -->
+  <!-- Data source -->
   <nb-glass-card class="nb-section" nbStagger="3">
+    <header class="nb-section__head">
+      <span class="nb-section__icon material-symbols-rounded" aria-hidden="true">dns</span>
+      <div>
+        <h2>Data source</h2>
+        <p>In-browser mock or the live ASP.NET Core API</p>
+      </div>
+    </header>
+
+    <div class="nb-row">
+      <div class="min-w-0">
+        <p class="m-0 text-sm font-semibold text-nb-text" id="nb-backend-label">
+          Live .NET backend
+        </p>
+        <p class="mt-0.5 mb-0 text-[0.8125rem] text-nb-muted" id="nb-backend-hint">
+          Sends requests to the ASP.NET Core API instead of the mock. Switching signs you out.
+        </p>
+      </div>
+      <button
+        type="button"
+        role="switch"
+        class="nb-switch"
+        aria-labelledby="nb-backend-label"
+        aria-describedby="nb-backend-hint"
+        [attr.aria-checked]="isLiveBackend()"
+        (click)="toggleBackend()"
+      >
+        <span class="nb-switch__thumb" aria-hidden="true"></span>
+      </button>
+    </div>
+
+    <div class="nb-row">
+      <div class="min-w-0">
+        <p class="m-0 text-sm font-semibold text-nb-text">Status</p>
+        <p
+          class="nb-backend-status mt-1 mb-0"
+          [attr.data-status]="backend.status()"
+          aria-live="polite"
+        >
+          <span class="nb-backend-status__dot" aria-hidden="true"></span>
+          {{ backendText().detail }}
+        </p>
+      </div>
+      <a class="nb-btn" [href]="apiDocsUrl" target="_blank" rel="noopener">
+        <span class="material-symbols-rounded" aria-hidden="true">menu_book</span>
+        API docs
+        <span class="material-symbols-rounded" aria-hidden="true">open_in_new</span>
+      </a>
+    </div>
+  </nb-glass-card>
+
+  <!-- About -->
+  <nb-glass-card class="nb-section" nbStagger="4">
     <header class="nb-section__head">
       <span class="nb-section__icon material-symbols-rounded" aria-hidden="true">info</span>
       <div>
         <h2>About</h2>
-        <p>A portfolio demo with a mocked backend</p>
+        <p>A portfolio demo with a mock and a live .NET backend</p>
       </div>
     </header>
 

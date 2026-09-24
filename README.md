@@ -2,7 +2,8 @@
 
 An e-commerce admin dashboard built with Angular 22: orders, fulfillment, catalog, customers and
 analytics in a dark, glass-style interface. Everything runs in the browser against a mock HTTP
-backend, so the demo needs no server and no sign-up.
+backend by default, so the demo needs no server and no sign-up; one switch moves it to the
+[live .NET backend](#live-net-backend).
 
 [![Build and deploy](https://github.com/antryas/nebula-commerce/actions/workflows/deploy.yml/badge.svg)](https://github.com/antryas/nebula-commerce/actions/workflows/deploy.yml)
 ![Angular 22](https://img.shields.io/badge/Angular-22-dd0031)
@@ -88,16 +89,36 @@ data is fake.
 - The backend code, including Faker, is a separate chunk loaded on the first request, so it
   stays out of the initial bundle.
 
-### Switching to a real backend
+## Live .NET backend
 
-1. Point `liveApiUrl` at the server in `src/environments/environment*.ts` and switch
-   `ApiConfigService` to `live` mode at runtime (no rebuild needed).
-2. Implement the same endpoints: `/auth/login`, `/orders`, `/products`, `/customers`,
-   `/analytics/*`. The request and response shapes are the types in `src/app/models/`.
+The same UI can run against a real server: [**nebula-api**](https://github.com/antryas/nebula-api),
+an ASP.NET Core Web API (EF Core + SQLite) that implements this exact `/api` contract.
 
-Components and API services stay unchanged; with token-based auth, the only addition is a small
-interceptor that attaches the token returned by `/auth/login`. A companion **ASP.NET Core Web
-API** backend implementing this contract is **planned**.
+- The topbar pill shows the data source: **Mock data**, **Live .NET · 42 ms** (green, measured
+  health-check latency) or **API offline** (red). Click it to open a menu with the
+  **Live .NET backend** switch and a link to the API docs (Swagger UI). The same switch is in
+  **Settings → Data source** and in the <kbd>Ctrl</kbd>+<kbd>K</kbd> palette.
+- Switching is instant (no rebuild): API clients read `ApiConfigService.baseUrl()` per request,
+  the mock interceptor steps aside in live mode, and an auth interceptor sends the JWT as a bearer
+  token. The choice is stored in `localStorage` (`nebula.backend`).
+- A session belongs to the backend that issued it, so switching signs you out and opens the login
+  page (demo credentials are pre-filled). A `401` from the live API does the same.
+- While live, the app pings `/health` every 30 s. If the live API is unreachable at startup, the
+  app falls back to mock data and says so.
+
+Run both locally:
+
+```bash
+# terminal 1: the API on http://localhost:5080 (Swagger UI at /swagger)
+git clone https://github.com/antryas/nebula-api
+dotnet run --project nebula-api/src/Nebula.Api
+
+# terminal 2: this app; the dev build points live mode at http://localhost:5080/api
+npm start
+```
+
+Then click **Mock data** in the topbar and turn on **Live .NET backend**. The live API URL per
+build lives in `liveApiUrl` in `src/environments/environment*.ts`.
 
 ## Getting started
 
@@ -114,6 +135,8 @@ npm run build      # production build in dist/
 `npm run screenshots` regenerates the images in `portfolio/screenshots/`.
 
 ## Screenshots
+
+![Live .NET backend](portfolio/screenshots/live-backend-online-popover-dark.png)
 
 | Orders                                              | Fulfillment board                                             |
 | --------------------------------------------------- | ------------------------------------------------------------- |
