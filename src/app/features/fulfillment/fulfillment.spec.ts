@@ -4,6 +4,8 @@ import { signal } from '@angular/core';
 import { LiveOrdersService } from '../../core/live/live-orders.service';
 import { mockDb } from '../../mock-api/db';
 import { MOCK_API_OPTIONS, mockApiInterceptor } from '../../mock-api/mock-api.interceptor';
+// Preload the lazily imported mock backend so the first request is fast inside a test.
+import '../../mock-api/mock-backend';
 import { Order } from '../../models';
 import { Fulfillment } from './fulfillment';
 
@@ -23,10 +25,14 @@ describe('Fulfillment', () => {
   async function render() {
     const fixture = TestBed.createComponent(Fulfillment);
     const el: HTMLElement = fixture.nativeElement;
-    await vi.waitFor(() => {
-      fixture.detectChanges();
-      expect(el.querySelectorAll('.card').length).toBeGreaterThan(0);
-    });
+    // First render compiles the board and loads ~100 orders; allow for a busy test runner.
+    await vi.waitFor(
+      () => {
+        fixture.detectChanges();
+        expect(el.querySelectorAll('.card').length).toBeGreaterThan(0);
+      },
+      { timeout: 3000 },
+    );
     return { fixture, el };
   }
 

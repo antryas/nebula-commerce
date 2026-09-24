@@ -2,6 +2,8 @@ import { TestBed } from '@angular/core/testing';
 import { HttpClient, provideHttpClient, withInterceptors } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { MOCK_API_OPTIONS, mockApiInterceptor } from '../mock-api.interceptor';
+// Preload the lazily imported mock backend so the first request is fast inside a test.
+import '../mock-backend';
 import { mockDb } from '../db';
 import { Customer, Order, Paged } from '../../models';
 

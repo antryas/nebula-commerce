@@ -8,6 +8,8 @@ import { LiveOrdersService } from '../../core/live/live-orders.service';
 import { ToastService } from '../../core/notifications/toast.service';
 import { mockDb } from '../../mock-api/db';
 import { MOCK_API_OPTIONS, mockApiInterceptor } from '../../mock-api/mock-api.interceptor';
+// Preload the lazily imported mock backend so the first request is fast inside a test.
+import '../../mock-api/mock-backend';
 import { Order } from '../../models';
 import { FulfillmentStore, nextStatus } from './fulfillment.store';
 

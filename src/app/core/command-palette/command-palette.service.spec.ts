@@ -3,6 +3,9 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 import { CommandPaletteService } from './command-palette.service';
+// Load the lazy palette chunk with the spec file so opening it in a test is fast even on a
+// busy runner (the service's dynamic import then resolves to this already-loaded module).
+import './command-palette';
 
 describe('CommandPaletteService', () => {
   let s: CommandPaletteService;
@@ -38,11 +41,10 @@ describe('CommandPaletteService', () => {
 
   it('renders the palette into an overlay once opened', async () => {
     s.open();
-    // First open loads the palette chunk, which can be slow on a busy test runner.
     await vi.waitFor(
       () =>
         expect(document.querySelector('nb-command-palette input[type="search"]')).not.toBeNull(),
-      { timeout: 5000 },
+      { timeout: 3000 },
     );
     s.close();
     await vi.waitFor(() => expect(document.querySelector('nb-command-palette')).toBeNull());
@@ -65,7 +67,7 @@ describe('CommandPaletteService', () => {
         input = document.querySelector<HTMLInputElement>('nb-command-palette input[type="search"]');
         expect(input).not.toBeNull();
       },
-      { timeout: 5000 },
+      { timeout: 3000 },
     );
     expect(input!.value).toBe('ord');
     // Once mounted, typing goes to the input itself; the buffer no longer swallows keys.

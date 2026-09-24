@@ -7,6 +7,8 @@ import { AnalyticsApi } from '../../core/api/analytics-api';
 import { AuthService } from '../../core/auth/auth.service';
 import { LiveOrdersService } from '../../core/live/live-orders.service';
 import { MOCK_API_OPTIONS, mockApiInterceptor } from '../../mock-api/mock-api.interceptor';
+// Preload the lazily imported mock backend so the first request is fast inside a test.
+import '../../mock-api/mock-backend';
 import { mockDb } from '../../mock-api/db';
 import { Order } from '../../models';
 import { Overview, greeting } from './overview';

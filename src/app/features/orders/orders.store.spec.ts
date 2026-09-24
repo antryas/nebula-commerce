@@ -4,6 +4,8 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { LiveOrdersService } from '../../core/live/live-orders.service';
 import { mockDb } from '../../mock-api/db';
 import { MOCK_API_OPTIONS, mockApiInterceptor } from '../../mock-api/mock-api.interceptor';
+// Preload the lazily imported mock backend so the first request is fast inside a test.
+import '../../mock-api/mock-backend';
 import { Order } from '../../models';
 import { OrdersStore } from './orders.store';
 

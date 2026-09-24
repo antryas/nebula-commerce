@@ -3,6 +3,8 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
 import { ToastService } from '../../core/notifications/toast.service';
 import { MOCK_API_OPTIONS, mockApiInterceptor } from '../../mock-api/mock-api.interceptor';
+// Preload the lazily imported mock backend so the first request is fast inside a test.
+import '../../mock-api/mock-backend';
 import { mockDb } from '../../mock-api/db';
 import { CustomerProfilePage } from './customer-profile';
 
