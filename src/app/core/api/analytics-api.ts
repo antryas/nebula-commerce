@@ -1,7 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
 import {
   CategorySales,
   FunnelStep,
@@ -12,6 +11,7 @@ import {
   RevenueRange,
   TimePoint,
 } from '../../models';
+import { ApiConfigService } from './api-config.service';
 import { toHttpParams } from './params';
 
 /** A best-selling product within the requested range. */
@@ -24,7 +24,11 @@ export interface TopProduct {
 @Injectable({ providedIn: 'root' })
 export class AnalyticsApi {
   private readonly http = inject(HttpClient);
-  private readonly base = `${environment.apiUrl}/analytics`;
+  private readonly config = inject(ApiConfigService);
+
+  private get base(): string {
+    return `${this.config.baseUrl()}/analytics`;
+  }
 
   overview(range: RevenueRange): Observable<Kpi[]> {
     return this.fetch<Kpi[]>('overview', range);

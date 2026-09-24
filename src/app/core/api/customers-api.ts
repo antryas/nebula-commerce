@@ -1,8 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
 import { Customer, ListQuery, Order, Paged } from '../../models';
+import { ApiConfigService } from './api-config.service';
 import { toHttpParams } from './params';
 
 /** Customer profile with their orders, newest first. */
@@ -14,7 +14,11 @@ export interface CustomerProfile {
 @Injectable({ providedIn: 'root' })
 export class CustomersApi {
   private readonly http = inject(HttpClient);
-  private readonly base = `${environment.apiUrl}/customers`;
+  private readonly config = inject(ApiConfigService);
+
+  private get base(): string {
+    return `${this.config.baseUrl()}/customers`;
+  }
 
   list(q: ListQuery): Observable<Paged<Customer>> {
     return this.http.get<Paged<Customer>>(this.base, { params: toHttpParams({ ...q }) });

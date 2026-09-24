@@ -7,7 +7,7 @@ import {
 } from '@angular/common/http';
 import { InjectionToken, inject } from '@angular/core';
 import { Observable, delay, from, map, mergeMap, of, throwError } from 'rxjs';
-import { environment } from '../../environments/environment';
+import { ApiConfigService } from '../core/api/api-config.service';
 import { ApiError } from '../models';
 import { mockDelayMs, shouldFail } from './latency';
 import type { MockResponse } from './router';
@@ -24,12 +24,14 @@ export const MOCK_API_OPTIONS = new InjectionToken<MockApiOptions>('MOCK_API_OPT
 });
 
 /**
- * Answers `environment.apiUrl` requests from the in-memory mock backend.
+ * Answers `environment.apiUrl` requests from the in-memory mock backend while the mock mode is
+ * active; in live mode every request passes through to the real API.
  * Kept deliberately tiny: the seeded database and handlers (faker included) live in
  * `mock-backend.ts`, which is loaded lazily on the first API call.
  */
 export const mockApiInterceptor: HttpInterceptorFn = (req, next) => {
-  if (!req.url.startsWith(`${environment.apiUrl}/`)) return next(req);
+  const config = inject(ApiConfigService);
+  if (config.mode() !== 'mock' || !config.isApiUrl(req.url)) return next(req);
 
   const options = inject(MOCK_API_OPTIONS);
   const url = new URL(req.urlWithParams, 'http://mock.local');

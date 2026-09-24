@@ -1,8 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
 import { ListQuery, Paged, Product, ProductCategory, StockFilter } from '../../models';
+import { ApiConfigService } from './api-config.service';
 import { toHttpParams } from './params';
 
 /** Editable product fields; server-owned fields are omitted. */
@@ -16,7 +16,11 @@ export interface ProductsQuery extends ListQuery {
 @Injectable({ providedIn: 'root' })
 export class ProductsApi {
   private readonly http = inject(HttpClient);
-  private readonly base = `${environment.apiUrl}/products`;
+  private readonly config = inject(ApiConfigService);
+
+  private get base(): string {
+    return `${this.config.baseUrl()}/products`;
+  }
 
   list(q: ProductsQuery): Observable<Paged<Product>> {
     return this.http.get<Paged<Product>>(this.base, { params: toHttpParams({ ...q }) });

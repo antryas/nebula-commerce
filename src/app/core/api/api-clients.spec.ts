@@ -2,7 +2,10 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { Observable, firstValueFrom } from 'rxjs';
+import { environment } from '../../../environments/environment';
 import { AnalyticsApi } from './analytics-api';
+import { ApiConfigService, BACKEND_STORAGE_KEY } from './api-config.service';
+import { DemoApi } from './demo-api';
 import { AuthApi } from './auth-api';
 import { CustomersApi } from './customers-api';
 import { LiveApi } from './live-api';
@@ -91,6 +94,26 @@ describe('API clients', () => {
     ctrl.expectOne('/api/analytics/top-products?range=30d&limit=5').flush([]);
     api.topProducts('12m', 3).subscribe();
     ctrl.expectOne('/api/analytics/top-products?range=12m&limit=3').flush([]);
+  });
+
+  it('resolve the base URL per request, so switching backends needs no reload', () => {
+    const orders = TestBed.inject(OrdersApi);
+    const config = TestBed.inject(ApiConfigService);
+    try {
+      config.setMode('live');
+      orders.get('ord_1').subscribe();
+      ctrl.expectOne(`${environment.liveApiUrl}/orders/ord_1`).flush({});
+      TestBed.inject(ProductsApi).remove('prd_1').subscribe();
+      ctrl.expectOne(`${environment.liveApiUrl}/products/prd_1`).flush(null);
+      TestBed.inject(DemoApi).reset().subscribe();
+      ctrl.expectOne(`${environment.liveApiUrl}/demo/reset`).flush(null);
+
+      config.setMode('mock');
+      orders.get('ord_1').subscribe();
+      ctrl.expectOne('/api/orders/ord_1').flush({});
+    } finally {
+      localStorage.removeItem(BACKEND_STORAGE_KEY);
+    }
   });
 
   it('AuthApi and LiveApi post to their endpoints', async () => {

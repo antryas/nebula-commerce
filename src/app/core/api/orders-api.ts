@@ -1,9 +1,9 @@
 import { HttpClient, HttpContext } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
 import { ListQuery, Order, OrderStatus, Paged } from '../../models';
 import { SKIP_ERROR_TOAST } from '../http/error.interceptor';
+import { ApiConfigService } from './api-config.service';
 import { toHttpParams } from './params';
 
 export interface OrdersQuery extends ListQuery {
@@ -17,7 +17,11 @@ export interface OrdersQuery extends ListQuery {
 @Injectable({ providedIn: 'root' })
 export class OrdersApi {
   private readonly http = inject(HttpClient);
-  private readonly base = `${environment.apiUrl}/orders`;
+  private readonly config = inject(ApiConfigService);
+
+  private get base(): string {
+    return `${this.config.baseUrl()}/orders`;
+  }
 
   list(q: OrdersQuery): Observable<Paged<Order>> {
     return this.http.get<Paged<Order>>(this.base, { params: toHttpParams({ ...q }) });

@@ -71,13 +71,14 @@ src/app/
 ```
 
 Pages depend only on typed API services in `core/api/` (`OrdersApi`, `ProductsApi`, ...), which
-call REST endpoints under `environment.apiUrl` with `HttpClient`. Nothing in the UI knows the
+call REST endpoints under `ApiConfigService.baseUrl()` with `HttpClient`. Nothing in the UI knows the
 data is fake.
 
 ### How the mock API works
 
-- When `environment.useMockApi` is `true`, `app.config.ts` registers `mockApiInterceptor`.
-- The interceptor catches requests to `environment.apiUrl` and answers them from an in-memory
+- `app.config.ts` always registers `mockApiInterceptor`. While the data source is **mock** (the
+  default, persisted in `localStorage` under `nebula.backend`), it catches requests to
+  `environment.apiUrl` and answers them from an in-memory
   database seeded by Faker (seed `42`), so every visitor sees the same data.
 - It simulates real network behavior: 150–450 ms latency and a 3% chance of a `500` on list
   requests, which exercises the loading, error and retry states. `?screenshot=1` turns both off.
@@ -89,8 +90,8 @@ data is fake.
 
 ### Switching to a real backend
 
-1. Set `useMockApi: false` and point `apiUrl` at the server in `src/environments/environment.ts`
-   (for example `https://api.example.com/api`).
+1. Point `liveApiUrl` at the server in `src/environments/environment*.ts` and switch
+   `ApiConfigService` to `live` mode at runtime (no rebuild needed).
 2. Implement the same endpoints: `/auth/login`, `/orders`, `/products`, `/customers`,
    `/analytics/*`. The request and response shapes are the types in `src/app/models/`.
 
