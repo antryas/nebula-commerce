@@ -528,16 +528,25 @@ function createOrders(
   );
   const startOfToday = Math.floor(nowMs / DAY_MS) * DAY_MS;
 
+  // Jittered systematic sampling over the day weights: every order still lands on a random
+  // day, but daily volumes follow the growth/weekend curve closely instead of drifting with
+  // sampling noise, so period-over-period comparisons reflect the intended trend.
+  const totalDayWeight = dayCum[dayCum.length - 1];
   const timestamps: number[] = [];
-  while (timestamps.length < ORDER_COUNT) {
-    const daysAgo = pickWeighted(f, dayCum);
-    const hour = pickWeighted(f, hourCum);
-    const ts =
-      startOfToday -
-      daysAgo * DAY_MS +
-      hour * HOUR_MS +
-      f.number.int({ min: 0, max: HOUR_MS - 1000 });
-    if (ts <= nowMs) timestamps.push(Math.floor(ts / 1000) * 1000);
+  for (let i = 0; i < ORDER_COUNT; i++) {
+    const u = ((i + f.number.float({ min: 0, max: 1 })) / ORDER_COUNT) * totalDayWeight;
+    const found = dayCum.findIndex((c) => u < c);
+    const daysAgo = found === -1 ? dayCum.length - 1 : found;
+    let ts: number;
+    do {
+      const hour = pickWeighted(f, hourCum);
+      ts =
+        startOfToday -
+        daysAgo * DAY_MS +
+        hour * HOUR_MS +
+        f.number.int({ min: 0, max: HOUR_MS - 1000 });
+    } while (ts > nowMs);
+    timestamps.push(Math.floor(ts / 1000) * 1000);
   }
   timestamps.sort((a, b) => a - b);
 
@@ -591,13 +600,13 @@ type StatusOdds = Partial<Record<OrderStatus, number>>;
 
 /**
  * Final-status odds by order age. Tuned so the fulfillment board has a healthy backlog
- * (~12-18 new, ~10-15 packing, ~15-25 shipped); anything older than the last band is delivered.
+ * (~10-15 new, ~10-16 packing, ~15-25 shipped); anything older than the last band is delivered.
  */
 const STATUS_BY_AGE: { maxAgeDays: number; odds: StatusOdds }[] = [
-  { maxAgeDays: 2, odds: { new: 0.65, packing: 0.35 } },
-  { maxAgeDays: 4, odds: { new: 0.45, packing: 0.55 } },
-  { maxAgeDays: 6, odds: { new: 0.3, packing: 0.5, shipped: 0.2 } },
-  { maxAgeDays: 8, odds: { packing: 0.4, shipped: 0.6 } },
+  { maxAgeDays: 2, odds: { new: 0.6, packing: 0.4 } },
+  { maxAgeDays: 4, odds: { new: 0.35, packing: 0.65 } },
+  { maxAgeDays: 6, odds: { new: 0.3, packing: 0.55, shipped: 0.15 } },
+  { maxAgeDays: 8, odds: { packing: 0.5, shipped: 0.5 } },
   { maxAgeDays: 12, odds: { shipped: 0.85, delivered: 0.15 } },
   { maxAgeDays: 14, odds: { shipped: 0.3, delivered: 0.7 } },
 ];
