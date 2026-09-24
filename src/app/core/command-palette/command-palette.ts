@@ -9,12 +9,15 @@ import {
   ChangeDetectionStrategy,
   Component,
   DOCUMENT,
+  ElementRef,
   InjectionToken,
   Injector,
   computed,
   inject,
+  afterNextRender,
   linkedSignal,
   signal,
+  viewChild,
 } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
@@ -36,6 +39,8 @@ const MIN_SEARCH_LENGTH = 2;
 const RESULTS_PER_ENTITY = 5;
 
 const PALETTE_CLOSE = new InjectionToken<() => void>('PALETTE_CLOSE');
+/** Returns (and stops collecting) text typed before the palette input could take focus. */
+const PALETTE_TAKE_TYPED = new InjectionToken<() => string>('PALETTE_TAKE_TYPED');
 const usd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
 
 interface SearchResult {
@@ -49,7 +54,11 @@ interface Section {
 }
 
 /** Mounts the palette in a centered CDK overlay; called lazily by `CommandPaletteService`. */
-export function attachCommandPalette(parent: Injector, close: () => void): PaletteHandle {
+export function attachCommandPalette(
+  parent: Injector,
+  close: () => void,
+  takeTyped: () => string = () => '',
+): PaletteHandle {
   const doc = parent.get(DOCUMENT);
   const returnFocusTo = doc.activeElement as HTMLElement | null;
   const overlayRef = createOverlayRef(parent, {
@@ -63,7 +72,10 @@ export function attachCommandPalette(parent: Injector, close: () => void): Palet
   });
   const injector = Injector.create({
     parent,
-    providers: [{ provide: PALETTE_CLOSE, useValue: close }],
+    providers: [
+      { provide: PALETTE_CLOSE, useValue: close },
+      { provide: PALETTE_TAKE_TYPED, useValue: takeTyped },
+    ],
   });
   overlayRef.attach(new ComponentPortal(CommandPalette, null, injector));
   const backdrop = overlayRef.backdropClick().subscribe(() => close());
@@ -97,6 +109,7 @@ export function attachCommandPalette(parent: Injector, close: () => void): Palet
             >search</span
           >
           <input
+            #searchInput
             type="search"
             role="combobox"
             aria-label="Search commands"
@@ -361,6 +374,9 @@ export class CommandPalette {
   private readonly productsApi = inject(ProductsApi);
   private readonly customersApi = inject(CustomersApi);
   private readonly closePalette = inject(PALETTE_CLOSE, { optional: true });
+  private readonly takeTyped = inject(PALETTE_TAKE_TYPED, { optional: true });
+
+  private readonly searchInput = viewChild.required<ElementRef<HTMLInputElement>>('searchInput');
 
   protected readonly query = signal('');
   protected readonly searching = signal(false);
@@ -447,6 +463,16 @@ export class CommandPalette {
   protected readonly activeId = computed(() =>
     this.flat().length ? this.optionId(this.active()) : null,
   );
+
+  constructor() {
+    // Focus right away and pick up whatever was typed while the palette was loading, so
+    // no keystroke typed after the shortcut is lost.
+    afterNextRender(() => {
+      this.searchInput().nativeElement.focus();
+      const typed = this.takeTyped?.() ?? '';
+      if (typed) this.query.update((q) => q + typed);
+    });
+  }
 
   protected optionId(index: number): string {
     return `nb-palette-option-${index}`;

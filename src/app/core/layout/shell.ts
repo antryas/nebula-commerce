@@ -4,6 +4,7 @@ import {
   DOCUMENT,
   DestroyRef,
   ElementRef,
+  afterNextRender,
   effect,
   inject,
   signal,
@@ -13,6 +14,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs';
 import { provideCharts } from '../../shared/charts/provide-charts';
+import { CommandPaletteService } from '../command-palette/command-palette.service';
 import { LiveOrdersService } from '../live/live-orders.service';
 import { Sidebar } from './sidebar';
 import { Topbar } from './topbar';
@@ -134,9 +136,24 @@ export class Shell {
 
   constructor() {
     this.live.start();
-    inject(DestroyRef).onDestroy(() => this.live.stop());
+    const destroyRef = inject(DestroyRef);
+    destroyRef.onDestroy(() => this.live.stop());
 
     const win = inject(DOCUMENT).defaultView;
+    // Fetch the command palette chunk once the first page has rendered and the browser is
+    // idle, so Ctrl+K opens instantly and no keystrokes are typed into a loading void.
+    const palette = inject(CommandPaletteService);
+    afterNextRender(() => {
+      if (!win) return;
+      const preload = () => void palette.preload().catch(() => undefined);
+      if (typeof win.requestIdleCallback === 'function') {
+        const id = win.requestIdleCallback(preload, { timeout: 3000 });
+        destroyRef.onDestroy(() => win.cancelIdleCallback(id));
+      } else {
+        const id = win.setTimeout(preload, 1500);
+        destroyRef.onDestroy(() => win.clearTimeout(id));
+      }
+    });
     inject(Router)
       .events.pipe(
         filter((e) => e instanceof NavigationEnd),

@@ -47,4 +47,30 @@ describe('CommandPaletteService', () => {
     s.close();
     await vi.waitFor(() => expect(document.querySelector('nb-command-palette')).toBeNull());
   });
+
+  it('preload() fetches the palette chunk once', async () => {
+    const first = s.preload();
+    expect(s.preload()).toBe(first);
+    await expect(first).resolves.toHaveProperty('attachCommandPalette');
+  });
+
+  it('keeps keys typed before the palette mounts as the initial query', async () => {
+    s.open();
+    const press = (key: string) =>
+      document.dispatchEvent(new KeyboardEvent('keydown', { key, cancelable: true }));
+    ['o', 'r', 'x', 'Backspace', 'd'].forEach(press);
+    let input: HTMLInputElement | null = null;
+    await vi.waitFor(
+      () => {
+        input = document.querySelector<HTMLInputElement>('nb-command-palette input[type="search"]');
+        expect(input).not.toBeNull();
+      },
+      { timeout: 5000 },
+    );
+    expect(input!.value).toBe('ord');
+    // Once mounted, typing goes to the input itself; the buffer no longer swallows keys.
+    const late = new KeyboardEvent('keydown', { key: 'z', cancelable: true });
+    document.dispatchEvent(late);
+    expect(late.defaultPrevented).toBe(false);
+  });
 });
