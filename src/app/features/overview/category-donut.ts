@@ -120,7 +120,7 @@ import { NbDecimalPipe } from '../../shared/pipes/intl-format';
       font-variant-numeric: tabular-nums;
       color: var(--nb-muted);
     }
-    @container (max-width: 360px) {
+    @container (max-width: 400px) {
       .nb-legend__pct {
         display: none;
       }
