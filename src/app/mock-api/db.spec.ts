@@ -79,6 +79,14 @@ describe('createSeed', () => {
       expect(o.history.at(-1)?.status).toBe(o.status);
     }
   });
+
+  it('has enough in-flight orders to fill the fulfillment board', () => {
+    const d = createSeed(42);
+    const count = (s: string) => d.orders.filter((o) => o.status === s).length;
+    expect(count('new')).toBeGreaterThanOrEqual(10);
+    expect(count('packing')).toBeGreaterThanOrEqual(8);
+    expect(count('shipped')).toBeGreaterThanOrEqual(12);
+  });
 });
 
 describe('MockDb', () => {

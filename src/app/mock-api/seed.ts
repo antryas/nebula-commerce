@@ -587,6 +587,26 @@ function createOrders(
   });
 }
 
+type StatusOdds = Partial<Record<OrderStatus, number>>;
+
+/**
+ * Final-status odds by order age. Tuned so the fulfillment board has a healthy backlog
+ * (~12-18 new, ~10-15 packing, ~15-25 shipped); anything older than the last band is delivered.
+ */
+const STATUS_BY_AGE: { maxAgeDays: number; odds: StatusOdds }[] = [
+  { maxAgeDays: 2, odds: { new: 0.65, packing: 0.35 } },
+  { maxAgeDays: 4, odds: { new: 0.45, packing: 0.55 } },
+  { maxAgeDays: 6, odds: { new: 0.3, packing: 0.5, shipped: 0.2 } },
+  { maxAgeDays: 8, odds: { packing: 0.4, shipped: 0.6 } },
+  { maxAgeDays: 12, odds: { shipped: 0.85, delivered: 0.15 } },
+  { maxAgeDays: 14, odds: { shipped: 0.3, delivered: 0.7 } },
+];
+
+function pickStatus(f: Faker, odds: StatusOdds): OrderStatus {
+  const entries = Object.entries(odds) as [OrderStatus, number][];
+  return entries[pickWeighted(f, cumulate(entries.map(([, w]) => w)))][0];
+}
+
 /** Builds a plausible status timeline whose final status depends on the order's age. */
 function createHistory(f: Faker, createdMs: number, nowMs: number): StatusChange[] {
   const ageMs = nowMs - createdMs;
@@ -594,10 +614,10 @@ function createHistory(f: Faker, createdMs: number, nowMs: number): StatusChange
 
   let target: OrderStatus;
   if (f.datatype.boolean(0.04)) target = 'cancelled';
-  else if (ageDays < 1) target = f.datatype.boolean(0.7) ? 'new' : 'packing';
-  else if (ageDays < 2) target = f.datatype.boolean(0.3) ? 'new' : 'packing';
-  else if (ageDays < 7) target = ageDays > 4 && f.datatype.boolean(0.25) ? 'delivered' : 'shipped';
-  else target = 'delivered';
+  else {
+    const band = STATUS_BY_AGE.find((b) => ageDays < b.maxAgeDays);
+    target = band ? pickStatus(f, band.odds) : 'delivered';
+  }
 
   const steps: { status: OrderStatus; delayMs: number; note?: string }[] = [
     { status: 'new', delayMs: 0, note: 'Order placed' },
