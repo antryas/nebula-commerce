@@ -68,6 +68,16 @@ describe('CommandPalette', () => {
     expect(navigate).toHaveBeenCalledWith('/orders');
   });
 
+  it('keeps the highlight when the debounced empty search settles', async () => {
+    const { input, key, fixture } = await setup();
+    await key('ArrowDown');
+    expect(input.getAttribute('aria-activedescendant')).toBe('nb-palette-option-1');
+    // The initial (empty) query re-emits once the search debounce elapses.
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    await fixture.whenStable();
+    expect(input.getAttribute('aria-activedescendant')).toBe('nb-palette-option-1');
+  });
+
   it('searches orders, products and customers after a debounce', async () => {
     const { type, labels, fixture } = await setup();
     const ctrl = TestBed.inject(HttpTestingController);

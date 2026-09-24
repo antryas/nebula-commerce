@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { Route, Router, provideRouter } from '@angular/router';
@@ -8,10 +8,28 @@ import { routes } from './app.routes';
 import { AuthService } from './core/auth/auth.service';
 import { LiveOrdersService } from './core/live/live-orders.service';
 
+/** Lightweight stand-in for feature pages: these specs are about routing, not page content. */
+@Component({ template: '', changeDetection: ChangeDetectionStrategy.OnPush })
+class StubPage {}
+
+/** The real route table with every shell child page swapped for `StubPage`. */
+function routesWithStubPages(): Route[] {
+  return routes.map((r) =>
+    r.path === '' && r.children
+      ? {
+          ...r,
+          children: r.children.map((c) =>
+            c.loadComponent ? { ...c, loadComponent: () => StubPage } : c,
+          ),
+        }
+      : r,
+  );
+}
+
 async function setup(authenticated: boolean) {
   TestBed.configureTestingModule({
     providers: [
-      provideRouter(routes),
+      provideRouter(routesWithStubPages()),
       provideHttpClient(),
       provideHttpClientTesting(),
       {

@@ -431,8 +431,19 @@ export class CommandPalette {
 
   private readonly flat = computed(() => this.sections().flatMap((s) => s.items));
 
-  /** Index of the highlighted option; resets to the top whenever results change. */
-  protected readonly active = linkedSignal({ source: this.flat, computation: () => 0 });
+  /**
+   * Identity of the option list. Keyed by command ids (a string compares by value) so a
+   * re-emission with the same options, e.g. the debounced empty search firing after open,
+   * does not reset the highlight.
+   */
+  private readonly optionKey = computed(() =>
+    this.flat()
+      .map((i) => i.command.id)
+      .join('|'),
+  );
+
+  /** Index of the highlighted option; resets to the top whenever the options change. */
+  protected readonly active = linkedSignal({ source: this.optionKey, computation: () => 0 });
   protected readonly activeId = computed(() =>
     this.flat().length ? this.optionId(this.active()) : null,
   );
