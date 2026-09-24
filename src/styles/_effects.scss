@@ -1,0 +1,83 @@
+@property --nb-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.nb-glass {
+  background: var(--nb-glass-bg);
+  border: 1px solid var(--nb-glass-border);
+  backdrop-filter: blur(16px) saturate(140%);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 20px 40px -24px rgba(0, 0, 0, 0.6);
+}
+
+.nb-gradient-text {
+  background: linear-gradient(90deg, var(--nb-accent-1), var(--nb-accent-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.nb-gradient-border {
+  position: relative;
+  border-radius: 1rem;
+  padding: 1px;
+  background: conic-gradient(
+    from var(--nb-angle),
+    var(--nb-accent-1),
+    var(--nb-accent-2),
+    var(--nb-accent-1)
+  );
+  animation: nb-spin 5s linear infinite;
+}
+
+@keyframes nb-spin {
+  to {
+    --nb-angle: 360deg;
+  }
+}
+
+.nb-stagger-item {
+  opacity: 0;
+  animation: nb-rise 520ms cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+  animation-delay: calc(var(--nb-stagger-index, 0) * 60ms);
+}
+
+@keyframes nb-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.nb-shimmer {
+  background: linear-gradient(90deg, var(--nb-card) 0%, var(--nb-border) 50%, var(--nb-card) 100%);
+  background-size: 200% 100%;
+  animation: nb-shimmer 1.4s infinite;
+}
+
+@keyframes nb-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+
+  .nb-stagger-item {
+    opacity: 1;
+  }
+}

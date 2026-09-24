@@ -1,1 +1,31 @@
-<h1 class="text-3xl font-bold text-violet-400">Nebula Commerce</h1>
+<!-- Temporary design-system preview; replaced by the app shell in a later task. -->
+<nb-aurora-background />
+<main class="mx-auto flex max-w-3xl flex-col gap-6 p-6">
+  <h1 class="text-3xl font-bold"><span class="nb-gradient-text">Nebula Commerce</span></h1>
+  <div class="flex flex-wrap gap-2">
+    <button
+      type="button"
+      class="rounded-lg border border-nb-border px-3 py-1.5"
+      (click)="theme.toggleMode()"
+    >
+      Mode: {{ theme.mode() }}
+    </button>
+    @for (a of accents; track a) {
+      <button
+        type="button"
+        class="rounded-lg border border-nb-border px-3 py-1.5"
+        (click)="theme.setAccent(a)"
+      >
+        {{ a }}
+      </button>
+    }
+  </div>
+  <nb-glass-card class="nb-stagger-item">
+    <p class="text-nb-muted">Revenue</p>
+    <p class="text-3xl font-semibold tabular-nums">$128,420</p>
+  </nb-glass-card>
+  <nb-gradient-border [active]="true">
+    <div class="p-5">Animated gradient border</div>
+  </nb-gradient-border>
+  <div class="nb-shimmer h-4 w-48 rounded"></div>
+</main>

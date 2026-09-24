@@ -1,0 +1,73 @@
+// Design tokens exposed as CSS custom properties. Dark is the default theme;
+// ThemeService toggles `.dark` / `.light` and `data-accent` on <html>.
+
+:root,
+.dark {
+  color-scheme: dark;
+  --nb-bg: #0b0f19;
+  --nb-surface: #0f1422;
+  --nb-card: #151b2d;
+  --nb-border: #232b40;
+  --nb-text: #e5e7eb;
+  --nb-muted: #94a3b8;
+  --nb-success: #34d399;
+  --nb-warning: #f59e0b;
+  --nb-danger: #f43f5e;
+  --nb-info: #38bdf8;
+  --nb-glass-bg: rgba(21, 27, 45, 0.55);
+  --nb-glass-border: rgba(255, 255, 255, 0.08);
+  --nb-aurora-opacity: 0.35;
+}
+
+.light {
+  color-scheme: light;
+  --nb-bg: #f8fafc;
+  --nb-surface: #f1f5f9;
+  --nb-card: #ffffff;
+  --nb-border: #e2e8f0;
+  --nb-text: #0f172a;
+  --nb-muted: #64748b;
+  // Darker status shades keep AA contrast on light surfaces.
+  --nb-success: #059669;
+  --nb-warning: #d97706;
+  --nb-danger: #e11d48;
+  --nb-info: #0284c7;
+  --nb-glass-bg: rgba(255, 255, 255, 0.7);
+  --nb-glass-border: rgba(15, 23, 42, 0.08);
+  --nb-aurora-opacity: 0.18;
+}
+
+// Accent presets (accent-1 -> accent-2). Violet is the default.
+:root,
+[data-accent='violet'] {
+  --nb-accent-1: #8b5cf6;
+  --nb-accent-2: #22d3ee;
+}
+
+[data-accent='cyan'] {
+  --nb-accent-1: #06b6d4;
+  --nb-accent-2: #3b82f6;
+}
+
+[data-accent='rose'] {
+  --nb-accent-1: #f43f5e;
+  --nb-accent-2: #f59e0b;
+}
+
+[data-accent='amber'] {
+  --nb-accent-1: #f59e0b;
+  --nb-accent-2: #ef4444;
+}
+
+html {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--nb-bg);
+  color: var(--nb-text);
+  font-family: Inter, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}

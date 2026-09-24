@@ -1,0 +1,42 @@
+@use '@angular/material' as mat;
+
+// Material system tokens bound to the Nebula design tokens, so Material components
+// follow dark/light mode and the accent preset without re-emitting the theme.
+$nb-system-overrides: (
+  primary: var(--nb-accent-1),
+  on-primary: #ffffff,
+  primary-container: color-mix(in srgb, var(--nb-accent-1) 24%, var(--nb-card)),
+  on-primary-container: var(--nb-text),
+  secondary-container: color-mix(in srgb, var(--nb-accent-1) 16%, var(--nb-card)),
+  on-secondary-container: var(--nb-text),
+  background: var(--nb-bg),
+  on-background: var(--nb-text),
+  surface: var(--nb-card),
+  on-surface: var(--nb-text),
+  on-surface-variant: var(--nb-muted),
+  surface-container-lowest: var(--nb-bg),
+  surface-container-low: var(--nb-surface),
+  surface-container: var(--nb-card),
+  surface-container-high: color-mix(in srgb, var(--nb-card) 94%, var(--nb-text)),
+  surface-container-highest: color-mix(in srgb, var(--nb-card) 90%, var(--nb-text)),
+  // Pure --nb-border is too faint for resting form-field outlines (WCAG 1.4.11).
+  outline: color-mix(in srgb, var(--nb-muted) 45%, var(--nb-border)),
+  outline-variant: var(--nb-border),
+  error: var(--nb-danger),
+);
+
+// The base M3 theme uses `color-scheme` so unresolved tokens (tertiary, error containers,
+// etc.) switch via `light-dark()` according to the `color-scheme` set by `.dark` / `.light`.
+html {
+  @include mat.theme(
+    (
+      color: (
+        theme-type: color-scheme,
+        primary: mat.$violet-palette,
+      ),
+      typography: Inter,
+      density: -1,
+    )
+  );
+  @include mat.theme-overrides($nb-system-overrides);
+}
