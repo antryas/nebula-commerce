@@ -1,0 +1,211 @@
+<nb-page-header title="Settings" subtitle="Profile, appearance and demo data" />
+
+<div class="grid grid-cols-1 items-start gap-5 lg:grid-cols-2">
+  <!-- Profile -->
+  <nb-glass-card class="nb-section" nbStagger="0">
+    <header class="nb-section__head">
+      <span class="nb-section__icon material-symbols-rounded" aria-hidden="true">person</span>
+      <div>
+        <h2>Profile</h2>
+        <p>How you appear across the dashboard</p>
+      </div>
+    </header>
+
+    <form class="flex flex-col gap-4" [formGroup]="form" (ngSubmit)="saveProfile()" novalidate>
+      <div class="nb-profile__preview">
+        <nb-avatar [src]="avatarUrl" [name]="previewName() || '?'" [size]="64" />
+        <div class="min-w-0">
+          <p class="m-0 truncate text-[1.0625rem] font-bold text-nb-text">
+            {{ previewName() || 'Your name' }}
+          </p>
+          <p class="mt-0.5 mb-0 text-[0.8125rem] text-nb-muted">Admin · Nebula store</p>
+        </div>
+      </div>
+
+      <label class="nb-field">
+        <span class="nb-field__label">Full name</span>
+        <input
+          name="name"
+          formControlName="name"
+          autocomplete="name"
+          [attr.aria-invalid]="invalid('name')"
+          aria-describedby="nb-name-error"
+        />
+        @if (invalid('name')) {
+          <span id="nb-name-error" class="nb-field__error">Enter your name</span>
+        }
+      </label>
+
+      <label class="nb-field">
+        <span class="nb-field__label">Email</span>
+        <input
+          name="email"
+          type="email"
+          formControlName="email"
+          autocomplete="email"
+          [attr.aria-invalid]="invalid('email')"
+          aria-describedby="nb-email-error"
+        />
+        @if (invalid('email')) {
+          <span id="nb-email-error" class="nb-field__error">Enter a valid email</span>
+        }
+      </label>
+
+      <div class="flex justify-end">
+        <button type="submit" class="nb-btn nb-btn--primary">
+          <span class="material-symbols-rounded" aria-hidden="true">check</span>
+          Save profile
+        </button>
+      </div>
+    </form>
+  </nb-glass-card>
+
+  <!-- Appearance -->
+  <nb-glass-card class="nb-section" nbStagger="1">
+    <header class="nb-section__head">
+      <span class="nb-section__icon material-symbols-rounded" aria-hidden="true">palette</span>
+      <div>
+        <h2>Appearance</h2>
+        <p>Theme and accent color, applied instantly</p>
+      </div>
+    </header>
+
+    <div class="flex flex-col gap-2.5">
+      <p class="m-0 text-[0.8125rem] font-semibold text-nb-text" id="nb-mode-label">Theme</p>
+      <div class="nb-segmented" role="radiogroup" aria-labelledby="nb-mode-label">
+        @for (m of modes; track m.value) {
+          <button
+            type="button"
+            role="radio"
+            class="nb-segmented__btn"
+            [class.is-active]="theme.mode() === m.value"
+            [attr.aria-checked]="theme.mode() === m.value"
+            (click)="setMode(m.value)"
+          >
+            <span class="material-symbols-rounded" aria-hidden="true">{{ m.icon }}</span>
+            {{ m.label }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-2.5">
+      <p class="m-0 text-[0.8125rem] font-semibold text-nb-text" id="nb-accent-label">Accent</p>
+      <div class="nb-swatches" role="radiogroup" aria-labelledby="nb-accent-label">
+        @for (a of accents; track a.name) {
+          <button
+            type="button"
+            role="radio"
+            class="nb-swatch"
+            [class.is-active]="theme.accent() === a.name"
+            [attr.aria-checked]="theme.accent() === a.name"
+            [attr.data-accent-swatch]="a.name"
+            [style.--nb-swatch-from]="a.from"
+            [style.--nb-swatch-to]="a.to"
+            (click)="setAccent(a.name)"
+          >
+            <span class="nb-swatch__dot" aria-hidden="true">
+              @if (theme.accent() === a.name) {
+                <span class="material-symbols-rounded">check</span>
+              }
+            </span>
+            <span class="nb-swatch__label">{{ a.label }}</span>
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="nb-preview" aria-hidden="true">
+      <div class="nb-preview__head">
+        <span class="text-[0.6875rem] font-semibold tracking-wider text-nb-muted uppercase"
+          >Preview</span
+        >
+        <span class="nb-preview__chip">+12.4%</span>
+      </div>
+      <p class="nb-preview__value nb-gradient-text">$48,210</p>
+      <div class="nb-preview__bars">
+        @for (h of bars; track $index) {
+          <span [style.height.%]="h"></span>
+        }
+      </div>
+      <span class="nb-preview__btn">Primary action</span>
+    </div>
+  </nb-glass-card>
+
+  <!-- Live demo -->
+  <nb-glass-card class="nb-section" nbStagger="2">
+    <header class="nb-section__head">
+      <span class="nb-section__icon material-symbols-rounded" aria-hidden="true">bolt</span>
+      <div>
+        <h2>Live demo</h2>
+        <p>Simulated real-time activity and demo data</p>
+      </div>
+    </header>
+
+    <div class="nb-row">
+      <div class="min-w-0">
+        <p class="m-0 text-sm font-semibold text-nb-text" id="nb-live-label">Live orders</p>
+        <p class="mt-0.5 mb-0 text-[0.8125rem] text-nb-muted">
+          A new order arrives every few seconds · {{ live.count() }} received this session
+        </p>
+      </div>
+      <button
+        type="button"
+        role="switch"
+        class="nb-switch"
+        aria-labelledby="nb-live-label"
+        [attr.aria-checked]="live.enabled()"
+        (click)="toggleLive()"
+      >
+        <span class="nb-switch__thumb" aria-hidden="true"></span>
+      </button>
+    </div>
+
+    <div class="nb-row">
+      <div class="min-w-0">
+        <p class="m-0 text-sm font-semibold text-nb-text">Demo data</p>
+        <p class="mt-0.5 mb-0 text-[0.8125rem] text-nb-muted">
+          Restore orders, products and customers to their initial state
+        </p>
+      </div>
+      <button
+        type="button"
+        class="nb-btn nb-btn--danger"
+        [disabled]="resetting()"
+        (click)="resetDemo()"
+      >
+        <span class="material-symbols-rounded" aria-hidden="true">restart_alt</span>
+        Reset demo data
+      </button>
+    </div>
+  </nb-glass-card>
+
+  <!-- About -->
+  <nb-glass-card class="nb-section" nbStagger="3">
+    <header class="nb-section__head">
+      <span class="nb-section__icon material-symbols-rounded" aria-hidden="true">info</span>
+      <div>
+        <h2>About</h2>
+        <p>A portfolio demo with a mocked backend</p>
+      </div>
+    </header>
+
+    <div class="flex items-center gap-3.5">
+      <span class="nb-brand-mark" aria-hidden="true">N</span>
+      <div>
+        <p class="m-0 font-bold text-nb-text">{{ appName }}</p>
+        <p class="mt-0.5 mb-0 text-[0.8125rem] tabular-nums text-nb-muted">Version {{ version }}</p>
+      </div>
+    </div>
+    <ul class="nb-stack" aria-label="Built with">
+      @for (s of stack; track s) {
+        <li>{{ s }}</li>
+      }
+    </ul>
+    <a class="nb-btn self-start" [href]="repoUrl" target="_blank" rel="noopener noreferrer">
+      <span class="material-symbols-rounded" aria-hidden="true">code</span>
+      Source on GitHub
+      <span class="material-symbols-rounded" aria-hidden="true">open_in_new</span>
+    </a>
+  </nb-glass-card>
+</div>

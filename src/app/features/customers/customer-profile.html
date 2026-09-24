@@ -1,0 +1,124 @@
+<a routerLink="/customers" class="nb-back">
+  <span class="material-symbols-rounded" aria-hidden="true">arrow_back</span>
+  All customers
+</a>
+
+@if (customer(); as c) {
+  <nb-glass-card class="nb-hero" [padded]="false" nbStagger="0">
+    <div class="nb-hero__glow" aria-hidden="true"></div>
+    <div class="nb-hero__body">
+      <div class="nb-hero__avatar">
+        <nb-avatar [src]="c.avatarUrl" [name]="c.name" [size]="96" />
+      </div>
+      <div class="nb-hero__info">
+        <p class="nb-hero__eyebrow">Customer since {{ c.createdAt | date: 'MMMM y' }}</p>
+        <h1 class="nb-hero__name">{{ c.name }}</h1>
+        <ul class="nb-hero__meta">
+          <li>
+            <span class="material-symbols-rounded" aria-hidden="true">mail</span>
+            <a [href]="'mailto:' + c.email">{{ c.email }}</a>
+          </li>
+          <li>
+            <span class="material-symbols-rounded" aria-hidden="true">call</span>
+            <span>{{ c.phone }}</span>
+          </li>
+          <li>
+            <nb-country-flag [code]="c.countryCode" />
+            <span>{{ c.country }}</span>
+          </li>
+        </ul>
+      </div>
+      <a class="nb-hero__cta" [href]="'mailto:' + c.email">
+        <span class="material-symbols-rounded" aria-hidden="true">send</span>
+        Email customer
+      </a>
+    </div>
+  </nb-glass-card>
+
+  @if (stats(); as s) {
+    <div class="nb-stats">
+      <nb-glass-card class="nb-stat" nbStagger="1">
+        <span class="nb-stat__icon material-symbols-rounded" aria-hidden="true">shopping_bag</span>
+        <p class="nb-stat__label">Orders</p>
+        <p class="nb-stat__value" [nbCountUp]="s.orders" format="number"></p>
+      </nb-glass-card>
+      <nb-glass-card class="nb-stat nb-stat--accent" nbStagger="2">
+        <span class="nb-stat__icon material-symbols-rounded" aria-hidden="true">payments</span>
+        <p class="nb-stat__label">Lifetime value</p>
+        <p class="nb-stat__value" [nbCountUp]="s.ltv" format="currency"></p>
+      </nb-glass-card>
+      <nb-glass-card class="nb-stat" nbStagger="3">
+        <span class="nb-stat__icon material-symbols-rounded" aria-hidden="true">receipt_long</span>
+        <p class="nb-stat__label">Avg order</p>
+        <p class="nb-stat__value" [nbCountUp]="s.aov" format="currency"></p>
+      </nb-glass-card>
+    </div>
+  }
+
+  <div class="nb-columns">
+    <nb-glass-card class="nb-section" [padded]="false" nbStagger="4">
+      <header class="nb-section__head">
+        <h2>Order history</h2>
+        <span class="nb-section__count">{{ orders().length }}</span>
+      </header>
+      @if (orders().length) {
+        <div class="nb-table-wrap">
+          <table class="nb-table">
+            <thead>
+              <tr>
+                <th scope="col">Order</th>
+                <th scope="col" class="nb-hide-sm">Date</th>
+                <th scope="col" class="nb-hide-sm is-num">Items</th>
+                <th scope="col">Status</th>
+                <th scope="col" class="is-num">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (o of orders(); track o.id) {
+                <tr>
+                  <td>
+                    <a class="nb-order-link" [routerLink]="['/orders', o.id]">#{{ o.number }}</a>
+                  </td>
+                  <td class="nb-hide-sm nb-muted">{{ o.createdAt | date: 'MMM d, y' }}</td>
+                  <td class="nb-hide-sm is-num nb-muted">{{ itemCount(o.items) }}</td>
+                  <td><nb-status-chip [status]="o.status" /></td>
+                  <td class="is-num nb-total">{{ o.total | currency: 'USD' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <p class="nb-section__empty">No orders yet.</p>
+      }
+    </nb-glass-card>
+
+    <nb-glass-card class="nb-section nb-notes" nbStagger="5">
+      <header class="nb-section__head nb-section__head--flush">
+        <h2 id="nb-notes-label">Notes</h2>
+        <span class="nb-notes__hint">Private to your team · saved on blur</span>
+      </header>
+      <textarea
+        aria-labelledby="nb-notes-label"
+        rows="8"
+        placeholder="Add context about this customer: preferences, support history…"
+        [value]="notes()"
+        (input)="onNotesInput($event)"
+        (blur)="saveNotes()"
+      ></textarea>
+    </nb-glass-card>
+  </div>
+} @else if (notFound()) {
+  <nb-glass-card>
+    <nb-error-state [error]="error()" title="Customer not found" (retry)="profile.reload()" />
+  </nb-glass-card>
+} @else if (error(); as e) {
+  <nb-glass-card>
+    <nb-error-state [error]="e" title="Couldn't load this customer" (retry)="profile.reload()" />
+  </nb-glass-card>
+} @else {
+  <nb-glass-card class="nb-hero-skeleton">
+    <div class="nb-hero-skeleton__avatar nb-shimmer" aria-hidden="true"></div>
+    <nb-skeleton class="flex-1" [rows]="3" [height]="18" label="Loading customer" />
+  </nb-glass-card>
+}

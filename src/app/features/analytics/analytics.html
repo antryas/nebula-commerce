@@ -1,0 +1,214 @@
+<nb-page-header title="Analytics" subtitle="Trends across sales, traffic and regions">
+  <div class="nb-range" role="group" aria-label="Date range">
+    @for (r of ranges; track r.value) {
+      <button
+        type="button"
+        class="nb-range__btn"
+        [class.is-active]="range() === r.value"
+        [attr.aria-pressed]="range() === r.value"
+        (click)="setRange(r.value)"
+      >
+        {{ r.label }}
+      </button>
+    }
+  </div>
+</nb-page-header>
+
+<div class="nb-analytics">
+  <!-- Revenue -->
+  <nb-glass-card class="nb-panel nb-panel--wide" nbStagger="0">
+    <header class="nb-panel__head">
+      <div>
+        <h2 class="nb-panel__title">Revenue</h2>
+        <p class="nb-panel__hint">Daily revenue and order volume for the selected range</p>
+      </div>
+      <dl class="nb-stats">
+        <div>
+          <dt>Revenue</dt>
+          <dd class="nb-gradient-text">{{ totals().revenue | compactCurrency }}</dd>
+        </div>
+        <div>
+          <dt>Orders</dt>
+          <dd>{{ totals().orders | number }}</dd>
+        </div>
+        <div>
+          <dt>Avg order</dt>
+          <dd>{{ totals().aov | currency: 'USD' : 'symbol' : '1.0-0' }}</dd>
+        </div>
+      </dl>
+    </header>
+    <div class="nb-legend" aria-hidden="true">
+      <span><i class="nb-legend__line"></i>Revenue</span>
+      <span><i class="nb-legend__bar"></i>Orders</span>
+    </div>
+    @if (revenueChart(); as opt) {
+      <div
+        echarts
+        class="nb-chart nb-chart--revenue"
+        role="img"
+        [attr.aria-label]="'Revenue chart, total ' + (totals().revenue | compactCurrency)"
+        [options]="opt"
+      ></div>
+    } @else if (revenueError(); as e) {
+      <nb-error-state [error]="e" title="Couldn't load revenue" (retry)="revenue.reload()" />
+    } @else {
+      <nb-skeleton
+        class="nb-chart nb-chart--revenue"
+        [rows]="6"
+        [height]="28"
+        label="Loading revenue"
+      />
+    }
+  </nb-glass-card>
+
+  <!-- World map -->
+  <nb-glass-card class="nb-panel nb-panel--map" nbStagger="1">
+    <header class="nb-panel__head">
+      <div>
+        <h2 class="nb-panel__title">Sales by country</h2>
+        <p class="nb-panel__hint">Revenue from paid orders, shipping destination</p>
+      </div>
+      <span class="nb-pill">
+        <span class="material-symbols-rounded" aria-hidden="true">public</span>
+        {{ geo.hasValue() ? geo.value().length : 0 }} countries
+      </span>
+    </header>
+    @if (geoChart(); as opt) {
+      <div
+        echarts
+        class="nb-chart nb-chart--map"
+        role="img"
+        aria-label="World map of revenue by country; see the top countries table for values"
+        [options]="opt"
+      ></div>
+    } @else if (geoError(); as e) {
+      <nb-error-state [error]="e" title="Couldn't load sales by country" (retry)="geo.reload()" />
+    } @else if (mapFailed()) {
+      <nb-error-state
+        [error]="{ status: 0, code: 'map', message: 'The world map could not be downloaded.' }"
+        title="Map unavailable"
+        (retry)="loadMap()"
+      />
+    } @else {
+      <div class="nb-chart nb-chart--map nb-map-placeholder nb-shimmer" role="status">
+        <span class="sr-only">Loading map</span>
+      </div>
+    }
+  </nb-glass-card>
+
+  <!-- Top countries -->
+  <nb-glass-card class="nb-panel nb-panel--countries" nbStagger="2">
+    <header class="nb-panel__head">
+      <div>
+        <h2 class="nb-panel__title">Top countries</h2>
+        <p class="nb-panel__hint">Share of revenue</p>
+      </div>
+    </header>
+    @if (geo.hasValue()) {
+      <table class="nb-countries">
+        <thead class="sr-only">
+          <tr>
+            <th scope="col">Country</th>
+            <th scope="col">Revenue</th>
+            <th scope="col">Share</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (c of countries(); track c.countryCode; let i = $index) {
+            <tr>
+              <th scope="row" class="nb-countries__name">
+                <span class="nb-countries__rank">{{ i + 1 }}</span>
+                <nb-country-flag [code]="c.countryCode" />
+                <span class="truncate">{{ c.country }}</span>
+              </th>
+              <td class="nb-countries__revenue">{{ c.revenue | compactCurrency }}</td>
+              <td class="nb-countries__share">
+                <span class="nb-share" aria-hidden="true">
+                  <span class="nb-share__fill" [style.width.%]="c.bar"></span>
+                </span>
+                <span class="nb-countries__pct">{{ c.share | number: '1.0-1' }}%</span>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="3" class="nb-countries__empty">No sales in this range</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    } @else if (geoError(); as e) {
+      <nb-error-state [error]="e" title="Couldn't load countries" (retry)="geo.reload()" />
+    } @else {
+      <nb-skeleton [rows]="8" [height]="20" label="Loading countries" />
+    }
+  </nb-glass-card>
+
+  <!-- Heatmap -->
+  <nb-glass-card class="nb-panel nb-panel--heatmap" nbStagger="3">
+    <header class="nb-panel__head">
+      <div>
+        <h2 class="nb-panel__title">Orders by hour</h2>
+        <p class="nb-panel__hint">When customers check out, by weekday and hour (UTC)</p>
+      </div>
+      @if (peak(); as p) {
+        <span class="nb-pill nb-pill--accent">
+          <span class="material-symbols-rounded" aria-hidden="true">bolt</span>
+          Peak: {{ p }}
+        </span>
+      }
+    </header>
+    @if (heatmapChart(); as opt) {
+      <div
+        echarts
+        class="nb-chart nb-chart--heatmap"
+        role="img"
+        [attr.aria-label]="
+          'Heatmap of orders by weekday and hour' + (peak() ? ', busiest ' + peak() : '')
+        "
+        [options]="opt"
+      ></div>
+    } @else if (heatmapError(); as e) {
+      <nb-error-state [error]="e" title="Couldn't load the heatmap" (retry)="heatmap.reload()" />
+    } @else {
+      <nb-skeleton
+        class="nb-chart nb-chart--heatmap"
+        [rows]="7"
+        [height]="24"
+        label="Loading heatmap"
+      />
+    }
+  </nb-glass-card>
+
+  <!-- Funnel -->
+  <nb-glass-card class="nb-panel nb-panel--funnel" nbStagger="4">
+    <header class="nb-panel__head">
+      <div>
+        <h2 class="nb-panel__title">Conversion funnel</h2>
+        <p class="nb-panel__hint">From storefront visit to paid order</p>
+      </div>
+      @if (funnel.hasValue()) {
+        <span class="nb-pill nb-pill--success">{{ conversion() | number: '1.1-1' }}% convert</span>
+      }
+    </header>
+    @if (funnelChart(); as opt) {
+      <div
+        echarts
+        class="nb-chart nb-chart--funnel"
+        role="img"
+        [attr.aria-label]="
+          'Conversion funnel, ' + (conversion() | number: '1.1-1') + '% of visits convert'
+        "
+        [options]="opt"
+      ></div>
+    } @else if (funnelError(); as e) {
+      <nb-error-state [error]="e" title="Couldn't load the funnel" (retry)="funnel.reload()" />
+    } @else {
+      <nb-skeleton
+        class="nb-chart nb-chart--funnel"
+        [rows]="5"
+        [height]="32"
+        label="Loading funnel"
+      />
+    }
+  </nb-glass-card>
+</div>

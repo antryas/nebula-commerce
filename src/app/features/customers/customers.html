@@ -1,0 +1,178 @@
+<nb-page-header title="Customers" subtitle="People who buy from Nebula">
+  <span class="nb-count">
+    <span class="material-symbols-rounded" aria-hidden="true">group</span>
+    {{ total() }} {{ search() ? 'matching' : 'customers' }}
+  </span>
+</nb-page-header>
+
+<nb-glass-card [padded]="false" class="nb-list">
+  <div class="nb-toolbar">
+    <label class="nb-search">
+      <span class="material-symbols-rounded" aria-hidden="true">search</span>
+      <span class="sr-only">Search customers</span>
+      <input
+        type="search"
+        placeholder="Search by name, email or country"
+        autocomplete="off"
+        [value]="searchText()"
+        (input)="onSearch($event)"
+      />
+      @if (searchText()) {
+        <button
+          type="button"
+          class="nb-search__clear"
+          aria-label="Clear search"
+          (click)="clearSearch()"
+        >
+          <span class="material-symbols-rounded" aria-hidden="true">close</span>
+        </button>
+      }
+    </label>
+    <label class="nb-sort-mobile">
+      <span>Sort</span>
+      <select [value]="sort()" (change)="onSortSelect($event)" aria-label="Sort customers by">
+        <option value="lifetimeValue">Lifetime value</option>
+        <option value="ordersCount">Orders</option>
+        <option value="lastOrderAt">Last order</option>
+      </select>
+    </label>
+  </div>
+
+  @if (customers.isLoading()) {
+    <div class="nb-progress" role="progressbar" aria-label="Loading customers"></div>
+  }
+
+  @if (error() && !data()) {
+    <nb-error-state
+      [error]="error()"
+      title="Couldn't load customers"
+      (retry)="customers.reload()"
+    />
+  } @else if (!data()) {
+    <div class="p-5"><nb-skeleton [rows]="8" [height]="36" label="Loading customers" /></div>
+  } @else if (rows().length === 0) {
+    <nb-empty-state
+      icon="person_search"
+      title="No customers found"
+      [message]="'Nothing matches “' + search() + '”. Try another name, email or country.'"
+    >
+      <button type="button" class="nb-btn" (click)="clearSearch()">Clear search</button>
+    </nb-empty-state>
+  } @else {
+    <div class="nb-table-wrap" [class.is-stale]="customers.isLoading()">
+      <table class="nb-table">
+        <thead>
+          <tr>
+            <th scope="col">Customer</th>
+            <th scope="col">Country</th>
+            <th scope="col" class="is-num" [attr.aria-sort]="ariaSort('ordersCount')">
+              <button type="button" class="nb-sort" (click)="sortBy('ordersCount')">
+                Orders
+                <span class="material-symbols-rounded" aria-hidden="true">{{
+                  sort() === 'ordersCount' && dir() === 'asc' ? 'arrow_upward' : 'arrow_downward'
+                }}</span>
+              </button>
+            </th>
+            <th scope="col" class="is-num" [attr.aria-sort]="ariaSort('lifetimeValue')">
+              <button type="button" class="nb-sort" (click)="sortBy('lifetimeValue')">
+                Lifetime value
+                <span class="material-symbols-rounded" aria-hidden="true">{{
+                  sort() === 'lifetimeValue' && dir() === 'asc' ? 'arrow_upward' : 'arrow_downward'
+                }}</span>
+              </button>
+            </th>
+            <th scope="col" [attr.aria-sort]="ariaSort('lastOrderAt')">
+              <button type="button" class="nb-sort" (click)="sortBy('lastOrderAt')">
+                Last order
+                <span class="material-symbols-rounded" aria-hidden="true">{{
+                  sort() === 'lastOrderAt' && dir() === 'asc' ? 'arrow_upward' : 'arrow_downward'
+                }}</span>
+              </button>
+            </th>
+            <th scope="col">Joined</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (c of rows(); track c.id) {
+            <tr (click)="open(c, $event)">
+              <td>
+                <div class="nb-person">
+                  <nb-avatar [src]="c.avatarUrl" [name]="c.name" [size]="36" />
+                  <div class="min-w-0">
+                    <a class="nb-person__name" [routerLink]="['/customers', c.id]">{{ c.name }}</a>
+                    <span class="nb-person__email">{{ c.email }}</span>
+                  </div>
+                </div>
+              </td>
+              <td data-col="country">
+                <span class="nb-country"
+                  ><nb-country-flag [code]="c.countryCode" />{{ c.country }}</span
+                >
+              </td>
+              <td data-col="orders" class="is-num">{{ c.ordersCount }}</td>
+              <td class="is-num nb-ltv">
+                {{ c.lifetimeValue | currency: 'USD' : 'symbol' : '1.0-0' }}
+              </td>
+              <td class="nb-muted">{{ c.lastOrderAt ? (c.lastOrderAt | relativeTime) : '—' }}</td>
+              <td class="nb-muted">{{ c.createdAt | date: 'MMM d, y' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      <ul class="nb-cards">
+        @for (c of rows(); track c.id) {
+          <li>
+            <a class="nb-card" [routerLink]="['/customers', c.id]">
+              <nb-avatar [src]="c.avatarUrl" [name]="c.name" [size]="44" />
+              <span class="nb-card__body">
+                <span class="nb-card__name">{{ c.name }}</span>
+                <span class="nb-card__email">{{ c.email }}</span>
+                <span class="nb-card__meta">
+                  <nb-country-flag [code]="c.countryCode" />{{ c.country }} · {{ c.ordersCount }}
+                  orders
+                </span>
+              </span>
+              <span class="nb-card__ltv">
+                {{ c.lifetimeValue | currency: 'USD' : 'symbol' : '1.0-0' }}
+                <small>{{ c.lastOrderAt ? (c.lastOrderAt | relativeTime) : 'No orders' }}</small>
+              </span>
+            </a>
+          </li>
+        }
+      </ul>
+    </div>
+
+    <footer class="nb-pager">
+      <label class="nb-pager__size">
+        Rows
+        <select [value]="pageSize()" (change)="setPageSize($event)" aria-label="Rows per page">
+          @for (s of pageSizes; track s) {
+            <option [value]="s">{{ s }}</option>
+          }
+        </select>
+      </label>
+      <span class="nb-pager__range" aria-live="polite">{{ rangeLabel() }}</span>
+      <div class="nb-pager__nav">
+        <button
+          type="button"
+          class="nb-icon-btn"
+          aria-label="Previous page"
+          [disabled]="page() <= 1"
+          (click)="goTo(page() - 1)"
+        >
+          <span class="material-symbols-rounded" aria-hidden="true">chevron_left</span>
+        </button>
+        <button
+          type="button"
+          class="nb-icon-btn"
+          aria-label="Next page"
+          [disabled]="page() >= pages()"
+          (click)="goTo(page() + 1)"
+        >
+          <span class="material-symbols-rounded" aria-hidden="true">chevron_right</span>
+        </button>
+      </div>
+    </footer>
+  }
+</nb-glass-card>
