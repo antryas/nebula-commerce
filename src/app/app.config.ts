@@ -7,6 +7,7 @@ import {
 import { provideRouter } from '@angular/router';
 import { environment } from '../environments/environment';
 import { routes } from './app.routes';
+import { errorInterceptor } from './core/http/error.interceptor';
 import { mockApiInterceptor } from './mock-api/mock-api.interceptor';
 
 export const appConfig: ApplicationConfig = {
@@ -14,10 +15,10 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideZonelessChangeDetection(),
     provideRouter(routes),
-    // The error interceptor is added in front of the mock interceptor in Task 6.
+    // errorInterceptor runs first so it also normalizes errors produced by the mock backend.
     provideHttpClient(
       withFetch(),
-      withInterceptors([...(environment.useMockApi ? [mockApiInterceptor] : [])]),
+      withInterceptors([errorInterceptor, ...(environment.useMockApi ? [mockApiInterceptor] : [])]),
     ),
   ],
 };

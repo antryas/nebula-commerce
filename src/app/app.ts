@@ -1,12 +1,13 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { AuroraBackground } from './core/layout/aurora-background';
+import { ToastHost } from './core/notifications/toast-host';
 import { ACCENT_NAMES, ThemeService } from './core/theme/theme.service';
 import { GlassCard } from './shared/ui/glass-card';
 import { GradientBorder } from './shared/ui/gradient-border';
 
 @Component({
   selector: 'app-root',
-  imports: [AuroraBackground, GlassCard, GradientBorder],
+  imports: [AuroraBackground, GlassCard, GradientBorder, ToastHost],
   styleUrl: './app.scss',
   templateUrl: './app.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
