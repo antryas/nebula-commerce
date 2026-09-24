@@ -1,59 +1,127 @@
-# NebulaCommerce
+# Nebula Commerce
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.2.0.
+An e-commerce admin dashboard built with Angular 22: orders, fulfillment, catalog, customers and
+analytics in a dark, glass-style interface. Everything runs in the browser against a mock HTTP
+backend, so the demo needs no server and no sign-up.
 
-## Development server
+[![Build and deploy](https://github.com/antryas/nebula-commerce/actions/workflows/deploy.yml/badge.svg)](https://github.com/antryas/nebula-commerce/actions/workflows/deploy.yml)
+![Angular 22](https://img.shields.io/badge/Angular-22-dd0031)
+![TypeScript](https://img.shields.io/badge/TypeScript-6-3178c6)
+![License: MIT](https://img.shields.io/badge/license-MIT-blue)
 
-To start a local development server, run:
+**[Live demo](https://antryas.github.io/nebula-commerce/)** · Demo account: `alex@nebula.store` /
+`demo1234` (prefilled on the sign-in page)
 
-```bash
-ng serve
+![Overview dashboard](portfolio/screenshots/01-overview-dark.png)
+
+## Features
+
+**Dashboard and charts**
+
+- KPI cards with count-up values, trend deltas and sparklines
+- Revenue chart (7 / 30 / 90 days, 12 months), sales by category, top products
+- Analytics page: revenue vs. orders, world map of sales by country, orders-by-hour heatmap,
+  conversion funnel
+
+**Orders and fulfillment**
+
+- Server-side paging, sorting, debounced search, status and date-range filters
+- Bulk status updates, CSV export, order details with a status timeline
+- Drag-and-drop fulfillment board (New → Packing → Shipped → Delivered) with optimistic updates
+  and rollback on error
+- Simulated live orders that arrive every few seconds with toasts and row highlights
+
+**Products and customers**
+
+- Catalog as a card grid or table, category / stock filters
+- Product editor built on a typed reactive form: validation, variants, image upload preview,
+  live card preview, unsaved-changes guard
+- Customer list and profile with lifetime value and order history
+
+**UX details**
+
+- `Ctrl K` command palette: jump to pages, run actions, search orders, products and customers
+- Dark and light themes plus four accent colors, remembered per browser
+- Skeleton loaders, empty and error states with retry, toast notifications
+- Responsive down to 375 px, keyboard accessible, respects `prefers-reduced-motion`
+
+## Tech stack
+
+| Area      | Choice                                                                    |
+| --------- | ------------------------------------------------------------------------- |
+| Framework | Angular 22: standalone components, zoneless change detection, signals     |
+| UI        | Angular Material and CDK (tables, date picker, drag and drop), Tailwind 4 |
+| Charts    | ECharts 6 via ngx-echarts, loaded lazily                                  |
+| Data      | `HttpClient` + RxJS at the HTTP boundary, signals for state (no NgRx)     |
+| Mock data | Faker with a fixed seed: 60 products, 700 customers, 4,800 orders         |
+| Quality   | Vitest unit tests, Playwright end-to-end smoke test, ESLint, Prettier     |
+| Delivery  | GitHub Actions → GitHub Pages                                             |
+
+## Architecture
+
+```
+src/app/
+  core/          app-wide services: typed API clients, auth, HTTP error handling,
+                 theme, toasts, live orders, command palette, layout shell
+  shared/        UI kit (cards, KPI, charts theme, skeletons, states), directives, pipes
+  features/      one lazy-loaded folder per page: overview, orders, fulfillment,
+                 products, customers, analytics, settings, login
+  models/        domain types shared by the UI and the API layer
+  mock-api/      in-memory backend used by the demo (never imported by features)
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+Pages depend only on typed API services in `core/api/` (`OrdersApi`, `ProductsApi`, ...), which
+call REST endpoints under `environment.apiUrl` with `HttpClient`. Nothing in the UI knows the
+data is fake.
 
-## Code scaffolding
+### How the mock API works
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+- When `environment.useMockApi` is `true`, `app.config.ts` registers `mockApiInterceptor`.
+- The interceptor catches requests to `environment.apiUrl` and answers them from an in-memory
+  database seeded by Faker (seed `42`), so every visitor sees the same data.
+- It simulates real network behavior: 150–450 ms latency and a 3% chance of a `500` on list
+  requests, which exercises the loading, error and retry states. `?screenshot=1` turns both off.
+- Handlers support paging, sorting, filtering and validation errors (`422`) like a real REST API.
+  Writes (status changes, product edits) persist until the page is reloaded or the demo data is
+  reset in Settings.
+- The backend code, including Faker, is a separate chunk loaded on the first request, so it
+  stays out of the initial bundle.
 
-```bash
-ng generate component component-name
-```
+### Switching to a real backend
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+1. Set `useMockApi: false` and point `apiUrl` at the server in `src/environments/environment.ts`
+   (for example `https://api.example.com/api`).
+2. Implement the same endpoints: `/auth/login`, `/orders`, `/products`, `/customers`,
+   `/analytics/*`. The request and response shapes are the types in `src/app/models/`.
 
-```bash
-ng generate --help
-```
+Components and API services stay unchanged; with token-based auth, the only addition is a small
+interceptor that attaches the token returned by `/auth/login`. A companion **ASP.NET Core Web
+API** backend implementing this contract is **planned**.
 
-## Building
+## Getting started
 
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
+Requires Node.js 22.22+ or 24.15+.
 
 ```bash
-ng e2e
+npm ci
+npm start          # dev server at http://localhost:4200
+npm test           # unit tests (Vitest, watch mode; add -- --watch=false for a single run)
+npm run e2e        # Playwright smoke test (starts its own server on port 4300)
+npm run build      # production build in dist/
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+`npm run screenshots` regenerates the images in `portfolio/screenshots/`.
 
-## Additional Resources
+## Screenshots
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+| Orders                                              | Fulfillment board                                             |
+| --------------------------------------------------- | ------------------------------------------------------------- |
+| ![Orders](portfolio/screenshots/02-orders-dark.png) | ![Fulfillment](portfolio/screenshots/04-fulfillment-dark.png) |
+
+| Product editor                                                    | Light theme                                                 |
+| ----------------------------------------------------------------- | ----------------------------------------------------------- |
+| ![Product editor](portfolio/screenshots/06-product-edit-dark.png) | ![Light theme](portfolio/screenshots/10-overview-light.png) |
+
+## License
+
+[MIT](LICENSE) © Anton R.

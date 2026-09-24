@@ -45,3 +45,8 @@ Thumbs.db
 
 # Local tooling
 .claude/
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
