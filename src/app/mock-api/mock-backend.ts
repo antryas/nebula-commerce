@@ -1,6 +1,7 @@
 import { registerAnalyticsRoutes } from './handlers/analytics';
 import { registerAuthRoutes } from './handlers/auth';
 import { registerCustomerRoutes } from './handlers/customers';
+import { registerDemoRoutes } from './handlers/demo';
 import { registerOrderRoutes } from './handlers/orders';
 import { registerProductRoutes } from './handlers/products';
 import { registerLiveRoutes } from './live-orders';
@@ -17,6 +18,7 @@ registerProductRoutes(mockRouter);
 registerCustomerRoutes(mockRouter);
 registerAnalyticsRoutes(mockRouter);
 registerLiveRoutes(mockRouter);
+registerDemoRoutes(mockRouter);
 
 /** Routes a request to its handler. Request and response bodies are deep-copied. */
 export function handleMockRequest(req: Omit<MockRequest, 'params'>): MockResponse {
