@@ -24,7 +24,7 @@ describe('orders mock API', () => {
       http.get<Paged<Order>>('/api/orders?page=1&pageSize=20&sort=createdAt'),
     );
     expect(r.items).toHaveLength(20);
-    expect(r.total).toBe(1200);
+    expect(r.total).toBe(4800);
     expect(Date.parse(r.items[0].createdAt)).toBeGreaterThanOrEqual(
       Date.parse(r.items[1].createdAt),
     );
@@ -56,11 +56,11 @@ describe('orders mock API', () => {
   });
 
   it('gets a single order as a copy of the stored one', async () => {
-    const target = mockDb.data.orders[5];
+    const target = mockDb.data.orders.find((x) => x.status !== 'cancelled')!;
     const o = await firstValueFrom(http.get<Order>(`/api/orders/${target.id}`));
     expect(o).toEqual(target);
     o.status = 'cancelled';
-    expect(mockDb.data.orders[5].status).not.toBe('cancelled');
+    expect(target.status).not.toBe('cancelled');
   });
 
   it('updates status and appends history', async () => {

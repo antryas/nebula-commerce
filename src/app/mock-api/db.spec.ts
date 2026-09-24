@@ -12,8 +12,8 @@ describe('createSeed', () => {
   it('creates expected volumes', () => {
     const d = createSeed(42);
     expect(d.products).toHaveLength(60);
-    expect(d.customers).toHaveLength(180);
-    expect(d.orders).toHaveLength(1200);
+    expect(d.customers).toHaveLength(700);
+    expect(d.orders).toHaveLength(4800);
   });
 
   it('keeps order totals consistent', () => {
@@ -49,8 +49,8 @@ describe('createSeed', () => {
     const skus = d.products.map((p) => p.sku);
     expect(skus.every((s) => /^[A-Z0-9-]{4,20}$/.test(s))).toBe(true);
     expect(new Set(skus).size).toBe(skus.length);
-    expect(new Set(d.orders.map((o) => o.id)).size).toBe(1200);
-    expect(new Set(d.orders.map((o) => o.number)).size).toBe(1200);
+    expect(new Set(d.orders.map((o) => o.id)).size).toBe(4800);
+    expect(new Set(d.orders.map((o) => o.number)).size).toBe(4800);
   });
 
   it('spreads orders over roughly the last 13 months', () => {
@@ -67,11 +67,11 @@ describe('createSeed', () => {
     expect(cancelled / d.orders.length).toBeGreaterThan(0.01);
     expect(cancelled / d.orders.length).toBeLessThan(0.08);
     const old = d.orders.filter(
-      (o) => MOCK_NOW.getTime() - Date.parse(o.createdAt) > 14 * 86_400_000,
+      (o) => MOCK_NOW.getTime() - Date.parse(o.createdAt) > 4 * 86_400_000,
     );
     expect(old.every((o) => o.status === 'delivered' || o.status === 'cancelled')).toBe(true);
     const fresh = d.orders.filter(
-      (o) => MOCK_NOW.getTime() - Date.parse(o.createdAt) < 2 * 86_400_000,
+      (o) => MOCK_NOW.getTime() - Date.parse(o.createdAt) < 0.5 * 86_400_000,
     );
     expect(fresh.every((o) => ['new', 'packing', 'cancelled'].includes(o.status))).toBe(true);
     expect(fresh.some((o) => o.status === 'new')).toBe(true);
@@ -83,9 +83,12 @@ describe('createSeed', () => {
   it('has enough in-flight orders to fill the fulfillment board', () => {
     const d = createSeed(42);
     const count = (s: string) => d.orders.filter((o) => o.status === s).length;
-    expect(count('new')).toBeGreaterThanOrEqual(10);
-    expect(count('packing')).toBeGreaterThanOrEqual(8);
-    expect(count('shipped')).toBeGreaterThanOrEqual(12);
+    expect(count('new')).toBeGreaterThanOrEqual(12);
+    expect(count('new')).toBeLessThanOrEqual(18);
+    expect(count('packing')).toBeGreaterThanOrEqual(10);
+    expect(count('packing')).toBeLessThanOrEqual(15);
+    expect(count('shipped')).toBeGreaterThanOrEqual(15);
+    expect(count('shipped')).toBeLessThanOrEqual(25);
   });
 });
 
@@ -94,7 +97,7 @@ describe('MockDb', () => {
     const db = new MockDb();
     db.data.orders.length = 0;
     db.reset();
-    expect(db.data.orders).toHaveLength(1200);
+    expect(db.data.orders).toHaveLength(4800);
   });
 
   it('issues increasing order numbers after the highest existing one', () => {

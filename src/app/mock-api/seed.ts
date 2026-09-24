@@ -23,8 +23,8 @@ export interface MockData {
 export const MOCK_NOW = new Date('2026-09-24T12:00:00Z');
 
 const PRODUCT_COUNT = 60;
-const CUSTOMER_COUNT = 180;
-const ORDER_COUNT = 1200;
+const CUSTOMER_COUNT = 700;
+const ORDER_COUNT = 4800;
 const HISTORY_DAYS = 395; // ~13 months
 const HOUR_MS = 3_600_000;
 const DAY_MS = 24 * HOUR_MS;
@@ -512,13 +512,13 @@ function createOrders(
   products: Product[],
   customers: CustomerSeed[],
 ): Order[] {
-  // Day weights: ~+4% per month growth, weekends +20%.
+  // Day weights: ~+6% per month growth, weekends +20%.
   const dayWeights: number[] = [];
   for (let daysAgo = 0; daysAgo <= HISTORY_DAYS; daysAgo++) {
     const monthsFromStart = (HISTORY_DAYS - daysAgo) / 30.4;
     const weekday = new Date(nowMs - daysAgo * DAY_MS).getUTCDay();
     const weekend = weekday === 0 || weekday === 6 ? 1.2 : 1;
-    dayWeights.push(1.04 ** monthsFromStart * weekend);
+    dayWeights.push(1.06 ** monthsFromStart * weekend);
   }
   const dayCum = cumulate(dayWeights);
   const hourCum = cumulate(HOUR_WEIGHTS);
@@ -599,16 +599,17 @@ function createOrders(
 type StatusOdds = Partial<Record<OrderStatus, number>>;
 
 /**
- * Final-status odds by order age. Tuned so the fulfillment board has a healthy backlog
- * (~10-15 new, ~10-16 packing, ~15-25 shipped); anything older than the last band is delivered.
+ * Final-status odds by order age, sized for ~15 orders/day. Tuned so the fulfillment board
+ * has a healthy backlog (~12-18 new, ~10-15 packing, ~15-25 shipped); anything older than
+ * the last band is delivered.
  */
 const STATUS_BY_AGE: { maxAgeDays: number; odds: StatusOdds }[] = [
-  { maxAgeDays: 2, odds: { new: 0.6, packing: 0.4 } },
-  { maxAgeDays: 4, odds: { new: 0.35, packing: 0.65 } },
-  { maxAgeDays: 6, odds: { new: 0.3, packing: 0.55, shipped: 0.15 } },
-  { maxAgeDays: 8, odds: { packing: 0.5, shipped: 0.5 } },
-  { maxAgeDays: 12, odds: { shipped: 0.85, delivered: 0.15 } },
-  { maxAgeDays: 14, odds: { shipped: 0.3, delivered: 0.7 } },
+  { maxAgeDays: 0.5, odds: { new: 0.7, packing: 0.3 } },
+  { maxAgeDays: 1, odds: { new: 0.3, packing: 0.55, shipped: 0.15 } },
+  { maxAgeDays: 1.5, odds: { new: 0.2, packing: 0.4, shipped: 0.4 } },
+  { maxAgeDays: 2, odds: { new: 0.05, packing: 0.1, shipped: 0.85 } },
+  { maxAgeDays: 3, odds: { shipped: 0.5, delivered: 0.5 } },
+  { maxAgeDays: 4, odds: { shipped: 0.15, delivered: 0.85 } },
 ];
 
 function pickStatus(f: Faker, odds: StatusOdds): OrderStatus {

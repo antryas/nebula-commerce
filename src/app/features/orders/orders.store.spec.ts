@@ -29,7 +29,7 @@ describe('OrdersStore', () => {
   it('loads first page on init', async () => {
     const store = TestBed.inject(OrdersStore);
     await waitFor(() => expect(store.result()?.items.length).toBe(20));
-    expect(store.result()?.total).toBe(1200);
+    expect(store.result()?.total).toBe(4800);
     expect(store.loading()).toBe(false);
   });
 
@@ -84,7 +84,7 @@ describe('OrdersStore', () => {
     latest.set(live);
     await waitFor(() => expect(store.result()!.items[0].id).toBe('ord_live_1'));
     expect(store.result()!.items).toHaveLength(20);
-    expect(store.result()!.total).toBe(1201);
+    expect(store.result()!.total).toBe(4801);
     expect(store.isFresh('ord_live_1')).toBe(true);
   });
 

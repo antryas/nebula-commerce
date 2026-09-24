@@ -3,6 +3,9 @@ import { HttpClient, provideHttpClient, withInterceptors } from '@angular/common
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { firstValueFrom } from 'rxjs';
 import { MOCK_API_OPTIONS, MockApiOptions, mockApiInterceptor } from './mock-api.interceptor';
+// Load the mock backend (faker + seed) with the file, not lazily inside the first test,
+// so that one-off cost never counts against a test's timeout.
+import './mock-backend';
 
 describe('mockApiInterceptor', () => {
   let http: HttpClient;

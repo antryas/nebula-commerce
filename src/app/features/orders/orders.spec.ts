@@ -36,7 +36,7 @@ describe('Orders', () => {
 
   it('renders 20 rows with the total count', async () => {
     const { el } = await setup();
-    expect(el.querySelector('nb-page-header')?.textContent).toContain('1,200');
+    expect(el.querySelector('nb-page-header')?.textContent).toContain('4,800');
     expect(el.querySelector('tr[data-order-row]')?.textContent).toMatch(/#\d{4}/);
   });
 

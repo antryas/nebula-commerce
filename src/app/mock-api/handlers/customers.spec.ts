@@ -21,7 +21,7 @@ describe('customers mock API', () => {
 
   it('lists customers with paging', async () => {
     const r = await firstValueFrom(http.get<Paged<Customer>>('/api/customers?page=2&pageSize=50'));
-    expect(r).toMatchObject({ total: 180, page: 2, pageSize: 50 });
+    expect(r).toMatchObject({ total: 700, page: 2, pageSize: 50 });
     expect(r.items).toHaveLength(50);
   });
 

@@ -6,6 +6,8 @@ export interface ListQueryOptions<T> {
 
 const DEFAULT_PAGE_SIZE = 20;
 const MAX_PAGE_SIZE = 100;
+/** Shared collator: far cheaper than `localeCompare` with options, which builds one per call. */
+const COLLATOR = new Intl.Collator('en', { sensitivity: 'base', numeric: true });
 
 /** Applies search, sorting and 1-based paging to an in-memory list. Never mutates `rows`. */
 export function applyListQuery<T>(rows: T[], q: ListQuery, opts: ListQueryOptions<T>): Paged<T> {
@@ -55,7 +57,7 @@ function compareValues(a: unknown, b: unknown): number {
   if (b === null || b === undefined) return 1;
   if (typeof a === 'number' && typeof b === 'number') return a - b;
   if (typeof a === 'boolean' && typeof b === 'boolean') return Number(a) - Number(b);
-  return String(a).localeCompare(String(b), 'en', { sensitivity: 'base', numeric: true });
+  return COLLATOR.compare(String(a), String(b));
 }
 
 function toInt(raw: string | null, fallback: number): number {
