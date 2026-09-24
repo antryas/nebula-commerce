@@ -16,6 +16,30 @@ describe('applyListQuery', () => {
     expect(r.items.map((x) => x.id)).toEqual(['a', 'c', 'b']);
   });
 
+  it('sorts ISO timestamps chronologically and other strings by natural collation', () => {
+    const dated = [
+      { id: 'x', at: '2026-09-02T08:00:00.000Z', sku: 'item-10' },
+      { id: 'y', at: '2026-09-10T08:00:00.000Z', sku: 'Item-9' },
+      { id: 'z', at: '2025-12-31T23:59:59.000Z', sku: 'item-100' },
+    ];
+    const byDate = applyListQuery(
+      dated,
+      { page: 1, pageSize: 10, sort: 'at', dir: 'asc' },
+      {
+        searchFields: [],
+      },
+    );
+    expect(byDate.items.map((x) => x.id)).toEqual(['z', 'x', 'y']);
+    const bySku = applyListQuery(
+      dated,
+      { page: 1, pageSize: 10, sort: 'sku', dir: 'asc' },
+      {
+        searchFields: [],
+      },
+    );
+    expect(bySku.items.map((x) => x.sku)).toEqual(['Item-9', 'item-10', 'item-100']);
+  });
+
   it('searches case-insensitively', () => {
     const r = applyListQuery(
       rows,

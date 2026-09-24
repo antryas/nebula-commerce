@@ -8,6 +8,7 @@ const DEFAULT_PAGE_SIZE = 20;
 const MAX_PAGE_SIZE = 100;
 /** Shared collator: far cheaper than `localeCompare` with options, which builds one per call. */
 const COLLATOR = new Intl.Collator('en', { sensitivity: 'base', numeric: true });
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}T/;
 
 /** Applies search, sorting and 1-based paging to an in-memory list. Never mutates `rows`. */
 export function applyListQuery<T>(rows: T[], q: ListQuery, opts: ListQueryOptions<T>): Paged<T> {
@@ -57,6 +58,11 @@ function compareValues(a: unknown, b: unknown): number {
   if (b === null || b === undefined) return 1;
   if (typeof a === 'number' && typeof b === 'number') return a - b;
   if (typeof a === 'boolean' && typeof b === 'boolean') return Number(a) - Number(b);
+  // ISO timestamps (the default order sort) order correctly as plain strings, and a plain
+  // comparison is ~10x cheaper than collation when sorting thousands of rows.
+  if (typeof a === 'string' && typeof b === 'string' && ISO_DATE.test(a) && ISO_DATE.test(b)) {
+    return a < b ? -1 : a > b ? 1 : 0;
+  }
   return COLLATOR.compare(String(a), String(b));
 }
 
