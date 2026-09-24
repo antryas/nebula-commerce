@@ -27,6 +27,34 @@
   <nb-gradient-border [active]="true">
     <div class="p-5">Animated gradient border</div>
   </nb-gradient-border>
-  <div class="nb-shimmer h-4 w-48 rounded"></div>
+  <nb-page-header title="UI kit" subtitle="Shared components preview">
+    <button type="button" class="rounded-lg border border-nb-border px-3 py-1.5">Action</button>
+  </nb-page-header>
+  <div class="grid gap-4 sm:grid-cols-2">
+    @for (k of kpis; track k.key; let i = $index) {
+      <nb-kpi-card [kpi]="k" [highlight]="i === 0" [index]="i" />
+    }
+  </div>
+  <nb-glass-card class="flex flex-wrap items-center gap-2">
+    @for (s of statuses; track s) {
+      <nb-status-chip [status]="s" />
+    }
+    <nb-avatar src="https://picsum.photos/seed/nb/64" name="Ada Lovelace" [size]="32" />
+    <nb-avatar src="broken.png" name="Grace Hopper" [size]="32" />
+    <span class="text-nb-muted text-sm"
+      >{{ 1250000 | compactCurrency }} · {{ recent | relativeTime }}</span
+    >
+  </nb-glass-card>
+  <nb-glass-card><nb-skeleton [rows]="4" /></nb-glass-card>
+  <nb-glass-card [padded]="false">
+    <nb-empty-state icon="search_off" title="No orders found" message="Try adjusting the filters.">
+      <button type="button" class="rounded-lg border border-nb-border px-3 py-1.5">
+        Clear filters
+      </button>
+    </nb-empty-state>
+  </nb-glass-card>
+  <nb-glass-card [padded]="false">
+    <nb-error-state [error]="demoError" />
+  </nb-glass-card>
 </main>
 <nb-toast-host />
