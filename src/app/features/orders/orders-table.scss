@@ -26,7 +26,8 @@
   font-variant-numeric: tabular-nums;
 }
 
-.mat-mdc-header-cell {
+// Scoped under .nb-table to outrank Material's `.mat-mdc-table .mat-mdc-header-cell { background: inherit }`.
+.nb-table .mat-mdc-header-cell {
   height: 2.75rem;
   border-bottom: 1px solid var(--nb-border);
   font-size: 0.6875rem;
