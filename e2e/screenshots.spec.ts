@@ -6,7 +6,12 @@ import { Browser, BrowserContextOptions, Page, expect, test } from '@playwright/
  * latency and random failures; the clock is pinned to the demo's "now".
  */
 
-const OUT_DIR = 'portfolio/screenshots';
+/**
+ * `NO_EMAILS=1` writes a copy without any e-mail addresses to `portfolio/catalog/`:
+ * marketplaces such as Upwork reject images that show contact details, even demo ones.
+ */
+const NO_EMAILS = !!process.env['NO_EMAILS'];
+const OUT_DIR = NO_EMAILS ? 'portfolio/catalog' : 'portfolio/screenshots';
 /** Seed "now" is 2026-09-24T12:00Z; a few minutes later keeps relative times fresh. */
 const DEMO_TIME = new Date('2026-09-24T12:20:00Z');
 
@@ -117,10 +122,25 @@ async function goLive(page: Page): Promise<void> {
   await page.waitForTimeout(300);
 }
 
+/** Blanks every text node that holds an e-mail address, keeping the layout intact. */
+async function hideEmails(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    const email = /[\w.+-]+@[\w-]+\.[\w.]+/;
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      if (email.test(node.textContent ?? '')) node.parentElement?.style.setProperty('visibility', 'hidden');
+    }
+    document.querySelectorAll<HTMLInputElement>('input, textarea').forEach((el) => {
+      if (email.test(el.value)) el.style.setProperty('color', 'transparent');
+    });
+  });
+}
+
 async function shoot(page: Page, name: string, fullPage = false): Promise<void> {
   // No focus rings or hover states from earlier interactions.
   await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur?.());
   await page.mouse.move(0, 0);
+  if (NO_EMAILS) await hideEmails(page);
   if (fullPage) {
     // Grow the viewport to the content instead of Playwright's `fullPage`, so the
     // viewport-sized sidebar and background stretch with the page.
@@ -244,5 +264,62 @@ test('12 + 13 mobile overview and orders (dark)', async ({ browser }) => {
   await shoot(page, '12-mobile-overview');
   await go(page, '/orders');
   await shoot(page, '13-mobile-orders');
+  await page.context().close();
+});
+
+/**
+ * Opens "Ask Nebula AI" from the topbar, asks a suggested question and waits until the
+ * recorded answer (templated from mock data, deterministic) has fully rendered.
+ */
+async function askAi(page: Page, question: string): Promise<void> {
+  await page.locator('button.nb-ask-ai').evaluate((el: HTMLElement) => el.click());
+  const panel = page.getByRole('dialog', { name: 'Ask Nebula AI' });
+  await expect(panel).toBeVisible();
+  await panel.getByRole('button', { name: question }).click();
+  await expect(panel.locator('.nb-ai__typing')).toHaveCount(0);
+  await expect(panel.locator('nb-markdown-lite li').first()).toBeVisible();
+  await expect(panel.locator('.nb-ai__tools')).toBeVisible();
+  await page.waitForLoadState('networkidle');
+  // Let the message entrance and the thread's scroll-to-bottom finish.
+  await page.waitForTimeout(800);
+}
+
+const AI_QUESTION = 'What were my top 5 products this month?';
+
+test('14 AI assistant (dark + light)', async ({ browser }) => {
+  for (const mode of ['dark', 'light'] as const) {
+    const page = await openPage(browser, { mode });
+    await go(page, '/overview');
+    await askAi(page, AI_QUESTION);
+    await shoot(page, `14-ai-assistant-${mode}`);
+    await page.context().close();
+  }
+});
+
+test('15 AI product description (dark)', async ({ browser }) => {
+  const page = await openPage(browser);
+  await go(page, '/products');
+  await page.getByPlaceholder('Search by name or SKU').fill('Action Camera');
+  await page.waitForLoadState('networkidle');
+  await page.locator('a[href*="/edit"]').filter({ hasText: 'Action Camera' }).first().click();
+  await expect(page).toHaveURL(/\/products\/[^/]+\/edit/);
+  await settle(page);
+
+  await page.getByLabel('Description tone').selectOption('premium');
+  await page.getByRole('button', { name: 'Generate with AI' }).click();
+  const description = page.locator('#product-description');
+  await expect(description).toHaveValue(/quiet luxury/);
+  await expect(page.locator('.nb-ai-gen__badge')).toBeVisible();
+  await page.locator('.nb-ai-gen').scrollIntoViewIfNeeded();
+  await page.waitForTimeout(500);
+  await shoot(page, '15-ai-product-description-dark');
+  await page.context().close();
+});
+
+test('16 AI assistant mobile (dark)', async ({ browser }) => {
+  const page = await openPage(browser, { viewport: { width: 390, height: 844 }, mobile: true });
+  await go(page, '/overview');
+  await askAi(page, AI_QUESTION);
+  await shoot(page, '16-ai-assistant-mobile');
   await page.context().close();
 });
