@@ -144,6 +144,12 @@
                   title="Written from a template: live AI is off or today's limit is used up"
                   >Recorded</span
                 >
+              } @else if (generatedMode() === 'live') {
+                <span
+                  class="nb-ai-gen__badge nb-ai-gen__badge--live"
+                  title="Written by the language model on the live backend"
+                  >Live AI</span
+                >
               }
             </div>
             <p id="product-ai-hint" class="nb-field__hint">

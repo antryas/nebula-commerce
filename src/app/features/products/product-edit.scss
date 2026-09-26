@@ -169,6 +169,10 @@
   color: var(--nb-muted);
   background: color-mix(in srgb, var(--nb-text) 7%, transparent);
 }
+.nb-ai-gen__badge--live {
+  color: color-mix(in srgb, var(--nb-success) 75%, var(--nb-text));
+  background: color-mix(in srgb, var(--nb-success) 12%, transparent);
+}
 
 .nb-row {
   display: grid;
