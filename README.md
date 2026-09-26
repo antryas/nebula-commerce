@@ -13,6 +13,8 @@ backend by default, so the demo needs no server and no sign-up; one switch moves
 **[Live demo](https://antryas.github.io/nebula-commerce/)** · Demo account: `alex@nebula.store` /
 `demo1234` (prefilled on the sign-in page)
 
+The public demo counts visits with Cloudflare Web Analytics (cookieless, no personal data).
+
 ![Overview dashboard](portfolio/screenshots/01-overview-dark.png)
 
 ## Features
