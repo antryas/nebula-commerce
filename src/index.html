@@ -16,6 +16,16 @@
       href="https://fonts.googleapis.com/icon?family=Material+Symbols+Rounded&display=block"
       rel="stylesheet"
     />
+    <!-- Cloudflare Web Analytics: load only on the public demo host, not on localhost -->
+    <script>
+      if (location.hostname === 'antryas.github.io') {
+        var cf = document.createElement('script');
+        cf.defer = true;
+        cf.src = 'https://static.cloudflareinsights.com/beacon.min.js';
+        cf.setAttribute('data-cf-beacon', '{"token": "afe3144cd615414eaa6eee51485b3d85"}');
+        document.head.appendChild(cf);
+      }
+    </script>
   </head>
   <body>
     <app-root></app-root>
