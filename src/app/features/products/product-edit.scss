@@ -127,6 +127,49 @@
   resize: vertical;
 }
 
+// "Generate with AI" row under the description.
+.nb-ai-gen {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.625rem;
+
+  + .nb-field__hint {
+    margin-top: 0.5rem;
+  }
+}
+
+.nb-ai-gen__tone {
+  width: auto;
+  height: 2.5rem;
+}
+
+.nb-ai-gen__btn .material-symbols-rounded {
+  color: var(--nb-accent-1);
+}
+
+.nb-ai-gen__spin {
+  animation: nb-ai-spin 900ms linear infinite;
+}
+
+@keyframes nb-ai-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.nb-ai-gen__badge {
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--nb-muted);
+  background: color-mix(in srgb, var(--nb-text) 7%, transparent);
+}
+
 .nb-row {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

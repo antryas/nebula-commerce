@@ -6,6 +6,7 @@ import {
   provideHttpClientTesting,
 } from '@angular/common/http/testing';
 import { Router, provideRouter } from '@angular/router';
+import { AiAssistantStore } from '../ai/ai-assistant.store';
 import { BackendSwitch } from '../api/backend-switch';
 import { CommandPalette } from './command-palette';
 
@@ -115,5 +116,16 @@ describe('CommandPalette', () => {
     expect(labels()[0]).toBe('Use live .NET backend');
     await key('Enter');
     expect(switchTo).toHaveBeenCalledWith('live');
+  });
+
+  it('opens the AI assistant', async () => {
+    const { type, key, labels } = await setup();
+    const open = vi.spyOn(TestBed.inject(AiAssistantStore), 'open').mockImplementation(() => {
+      /* keep the test offline */
+    });
+    await type('ask ai');
+    expect(labels()[0]).toBe('Ask AI');
+    await key('Enter');
+    expect(open).toHaveBeenCalledTimes(1);
   });
 });

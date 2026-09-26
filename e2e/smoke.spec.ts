@@ -92,4 +92,18 @@ test.describe('smoke', () => {
     await expect(page).toHaveURL(/\/orders(\?|$)/);
     await expectHeading(page, 'Orders');
   });
+
+  test('AI assistant answers a suggested question', async ({ page }) => {
+    await expectHeading(page);
+    await page.getByRole('button', { name: 'Ask Nebula AI' }).click();
+    const panel = page.getByRole('dialog', { name: 'Ask Nebula AI' });
+    await expect(panel).toBeVisible();
+    await expect(panel).toContainText('Recorded demo');
+    await panel.getByRole('button', { name: 'What were my top 5 products this month?' }).click();
+    const log = panel.getByRole('log');
+    await expect(log).toContainText('Your top 5 products over the last 30 days');
+    await expect(log).toContainText('Used: top products');
+    await page.keyboard.press('Escape');
+    await expect(panel).toBeHidden();
+  });
 });

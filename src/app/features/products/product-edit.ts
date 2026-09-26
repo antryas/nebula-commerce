@@ -12,15 +12,16 @@ import {
   signal,
   untracked,
 } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { AbstractControl, NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { Router, RouterLink } from '@angular/router';
-import { map } from 'rxjs';
+import { finalize, map } from 'rxjs';
+import { AiApi } from '../../core/api/ai-api';
 import { ProductsApi } from '../../core/api/products-api';
 import { toApiError } from '../../core/http/api-error';
 import { ToastService } from '../../core/notifications/toast.service';
-import { ApiError, Product } from '../../models';
+import { AI_PRODUCT_NAME_MAX, AiMode, AiTone, ApiError, Product } from '../../models';
 import { EmptyState } from '../../shared/ui/empty-state';
 import { ErrorState } from '../../shared/ui/error-state';
 import { GlassCard } from '../../shared/ui/glass-card';
@@ -46,6 +47,12 @@ import { HasUnsavedChanges } from './unsaved-changes.guard';
 import { NbCurrencyPipe } from '../../shared/pipes/intl-format';
 
 type LoadState = 'loading' | 'ready' | 'error';
+
+export const AI_TONES: readonly { value: AiTone; label: string }[] = [
+  { value: 'friendly', label: 'Friendly' },
+  { value: 'premium', label: 'Premium' },
+  { value: 'playful', label: 'Playful' },
+];
 
 /** Create (`/products/new`) and edit (`/products/:id/edit`) page with a live preview. */
 @Component({
@@ -74,6 +81,8 @@ export class ProductEdit implements HasUnsavedChanges {
   private readonly router = inject(Router);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly injector = inject(Injector);
+  private readonly ai = inject(AiApi);
+  private readonly destroyRef = inject(DestroyRef);
 
   /** Route param bound via `withComponentInputBinding()`; absent for a new product. */
   readonly id = input<string>();
@@ -83,11 +92,16 @@ export class ProductEdit implements HasUnsavedChanges {
   protected readonly categories = PRODUCT_CATEGORIES;
   protected readonly nameMax = NAME_MAX;
   protected readonly descriptionMax = DESCRIPTION_MAX;
+  protected readonly tones = AI_TONES;
 
   protected readonly state = signal<LoadState>('ready');
   protected readonly loadError = signal<ApiError | null>(null);
   protected readonly pending = signal(false);
   protected readonly submitted = signal(false);
+  protected readonly tone = signal<AiTone>('friendly');
+  protected readonly generating = signal(false);
+  /** Mode of the last generated description; `recorded` shows a small badge. */
+  protected readonly generatedMode = signal<AiMode | null>(null);
   private readonly loaded = signal<Product | null>(null);
   private readonly reloadTick = signal(0);
   private saved = false;
@@ -116,6 +130,11 @@ export class ProductEdit implements HasUnsavedChanges {
   });
   protected readonly descriptionLength = computed(() => this.value().description.length);
   protected readonly nameLength = computed(() => this.value().name.length);
+  /** The AI needs at least a name and a category to write from. */
+  protected readonly canGenerate = computed(() => {
+    const { name, category } = this.value();
+    return !!name.trim() && !!category;
+  });
   protected readonly savings = computed(() => {
     const { price, compareAtPrice } = this.value();
     if (!price || !compareAtPrice || compareAtPrice <= price) return null;
@@ -163,7 +182,7 @@ export class ProductEdit implements HasUnsavedChanges {
       });
     });
 
-    inject(DestroyRef).onDestroy(() => {
+    this.destroyRef.onDestroy(() => {
       for (const url of this.objectUrls) {
         if (url !== this.persistedImageUrl) URL.revokeObjectURL(url);
       }
@@ -225,6 +244,38 @@ export class ProductEdit implements HasUnsavedChanges {
   protected clearImage(): void {
     this.controls.imageUrl.setValue('');
     this.controls.imageUrl.markAsDirty();
+  }
+
+  protected onTone(e: Event): void {
+    this.tone.set((e.target as HTMLSelectElement).value as AiTone);
+  }
+
+  /** Fills the description from name, category and tone; the form turns dirty like any edit. */
+  protected generateDescription(): void {
+    const { name, category } = this.form.getRawValue();
+    if (!name.trim() || !category || this.generating()) return;
+    this.generating.set(true);
+    this.ai
+      .productDescription({
+        name: name.trim().slice(0, AI_PRODUCT_NAME_MAX),
+        category,
+        tone: this.tone(),
+      })
+      .pipe(
+        finalize(() => this.generating.set(false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: (res) => {
+          const description = this.controls.description;
+          description.setValue(res.description.slice(0, DESCRIPTION_MAX));
+          description.markAsDirty();
+          description.markAsTouched();
+          this.generatedMode.set(res.mode);
+        },
+        // The error interceptor already shows a toast for failed mutations.
+        error: () => undefined,
+      });
   }
 
   protected discard(): void {

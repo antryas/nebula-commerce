@@ -111,6 +111,48 @@
             @if (err(controls.description); as message) {
               <p class="nb-field__error">{{ message }}</p>
             }
+            <div class="nb-ai-gen">
+              <select
+                class="nb-control nb-ai-gen__tone"
+                aria-label="Description tone"
+                [value]="tone()"
+                (change)="onTone($event)"
+              >
+                @for (t of tones; track t.value) {
+                  <option [value]="t.value">{{ t.label }}</option>
+                }
+              </select>
+              <button
+                type="button"
+                class="nb-btn nb-ai-gen__btn"
+                [disabled]="!canGenerate() || generating()"
+                [attr.aria-busy]="generating()"
+                aria-describedby="product-ai-hint"
+                (click)="generateDescription()"
+              >
+                <span
+                  class="material-symbols-rounded"
+                  [class.nb-ai-gen__spin]="generating()"
+                  aria-hidden="true"
+                  >{{ generating() ? 'progress_activity' : 'auto_awesome' }}</span
+                >
+                {{ generating() ? 'Generating…' : 'Generate with AI' }}
+              </button>
+              @if (generatedMode() === 'recorded') {
+                <span
+                  class="nb-ai-gen__badge"
+                  title="Written from a template: live AI is off or today's limit is used up"
+                  >Recorded</span
+                >
+              }
+            </div>
+            <p id="product-ai-hint" class="nb-field__hint">
+              {{
+                canGenerate()
+                  ? 'Replaces the description using the name, category and tone.'
+                  : 'Add a name and category to generate a description.'
+              }}
+            </p>
           </div>
         </nb-glass-card>
 

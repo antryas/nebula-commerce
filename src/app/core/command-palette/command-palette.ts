@@ -24,6 +24,7 @@ import { Router } from '@angular/router';
 import { Observable, catchError, debounceTime, forkJoin, map, of, switchMap, tap } from 'rxjs';
 import { Customer, Order, Paged, Product } from '../../models';
 import { GradientBorder } from '../../shared/ui/gradient-border';
+import { AiAssistantStore } from '../ai/ai-assistant.store';
 import { ApiConfigService } from '../api/api-config.service';
 import { BackendSwitch } from '../api/backend-switch';
 import { CustomersApi } from '../api/customers-api';
@@ -374,6 +375,7 @@ export class CommandPalette {
   private readonly auth = inject(AuthService);
   private readonly apiConfig = inject(ApiConfigService);
   private readonly backendSwitch = inject(BackendSwitch);
+  private readonly ai = inject(AiAssistantStore);
   private readonly ordersApi = inject(OrdersApi);
   private readonly productsApi = inject(ProductsApi);
   private readonly customersApi = inject(CustomersApi);
@@ -393,6 +395,14 @@ export class CommandPalette {
       icon: n.icon,
       run: () => this.go(`/${n.path}`),
     })),
+    {
+      id: 'action:ask-ai',
+      group: 'Actions',
+      label: 'Ask AI',
+      hint: 'Ask Nebula AI about sales, orders and customers',
+      icon: 'auto_awesome',
+      run: () => this.ai.open(),
+    },
     {
       id: 'action:theme',
       group: 'Actions',

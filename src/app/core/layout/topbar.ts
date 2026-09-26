@@ -4,6 +4,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { ActivatedRouteSnapshot, NavigationEnd, Router, RouterLink } from '@angular/router';
 import { filter, map } from 'rxjs';
 import { Avatar } from '../../shared/ui/avatar';
+import { AiAssistantStore } from '../ai/ai-assistant.store';
 import { AuthService } from '../auth/auth.service';
 import { CommandPaletteService } from '../command-palette/command-palette.service';
 import { LiveOrdersService } from '../live/live-orders.service';
@@ -22,8 +23,8 @@ function pageTitle(router: Router): string {
 }
 
 /**
- * Sticky header: page title, palette trigger, data source, live feed switch, theme toggle and
- * user menu.
+ * Sticky header: page title, palette trigger, AI assistant, data source, live feed switch, theme
+ * toggle and user menu.
  */
 @Component({
   selector: 'nb-topbar',
@@ -52,6 +53,19 @@ function pageTitle(router: Router): string {
     </button>
 
     <div class="nb-topbar__actions">
+      <button
+        type="button"
+        class="nb-ask-ai"
+        [class.is-open]="ai.isOpen()"
+        [attr.aria-expanded]="ai.isOpen()"
+        aria-label="Ask Nebula AI"
+        title="Ask Nebula AI"
+        (click)="ai.toggle()"
+      >
+        <span class="material-symbols-rounded" aria-hidden="true">auto_awesome</span>
+        <span class="nb-ask-ai__label" aria-hidden="true">Ask AI</span>
+      </button>
+
       <nb-backend-indicator />
 
       <button
@@ -76,7 +90,7 @@ function pageTitle(router: Router): string {
 
       <button
         type="button"
-        class="nb-icon-btn"
+        class="nb-icon-btn nb-topbar__theme"
         [attr.aria-label]="
           theme.mode() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'
         "
@@ -135,6 +149,7 @@ function pageTitle(router: Router): string {
     }
     .nb-topbar__title {
       display: flex;
+      flex-shrink: 0;
       align-items: center;
       gap: 0.25rem;
       min-width: 0;
@@ -161,7 +176,10 @@ function pageTitle(router: Router): string {
       align-items: center;
       gap: 0.625rem;
       width: min(26rem, 40vw);
+      // Shrinks (text first, see __text) before the page title does.
+      min-width: 2.5rem;
       height: 2.5rem;
+      overflow: hidden;
       margin-left: auto;
       padding: 0 0.5rem 0 0.875rem;
       border: 1px solid var(--nb-glass-border);
@@ -183,6 +201,16 @@ function pageTitle(router: Router): string {
       outline: 2px solid var(--nb-accent-2);
       outline-offset: 2px;
     }
+    .nb-search__text {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .nb-search .material-symbols-rounded,
+    .nb-search__kbd {
+      flex: none;
+    }
     .nb-search .material-symbols-rounded {
       width: 1.25rem;
       overflow: hidden;
@@ -196,6 +224,45 @@ function pageTitle(router: Router): string {
       display: flex;
       align-items: center;
       gap: 0.5rem;
+    }
+
+    .nb-ask-ai {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      height: 2.25rem;
+      padding: 0 0.875rem 0 0.625rem;
+      border: 1px solid color-mix(in srgb, var(--nb-accent-1) 40%, transparent);
+      border-radius: 9999px;
+      font: inherit;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      white-space: nowrap;
+      color: var(--nb-text);
+      background: linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--nb-accent-1) 18%, transparent),
+        color-mix(in srgb, var(--nb-accent-2) 10%, transparent)
+      );
+      cursor: pointer;
+      transition:
+        border-color 150ms ease,
+        box-shadow 150ms ease;
+    }
+    .nb-ask-ai:hover,
+    .nb-ask-ai.is-open {
+      border-color: color-mix(in srgb, var(--nb-accent-1) 70%, transparent);
+      box-shadow: 0 0 0 4px color-mix(in srgb, var(--nb-accent-1) 12%, transparent);
+    }
+    .nb-ask-ai:focus-visible {
+      outline: 2px solid var(--nb-accent-2);
+      outline-offset: 2px;
+    }
+    .nb-ask-ai .material-symbols-rounded {
+      width: 1.125rem;
+      overflow: hidden;
+      font-size: 1.125rem;
+      color: var(--nb-accent-1);
     }
 
     .nb-live {
@@ -321,6 +388,17 @@ function pageTitle(router: Router): string {
       color: var(--nb-muted);
     }
 
+    // Narrow desktops: the AI pill goes icon-only so the page title keeps its full width.
+    @media (max-width: 1199.98px) {
+      .nb-ask-ai__label {
+        display: none;
+      }
+      .nb-ask-ai {
+        justify-content: center;
+        width: 2.25rem;
+        padding: 0;
+      }
+    }
     @media (max-width: 1023.98px) {
       :host {
         padding: 0 1rem;
@@ -335,6 +413,9 @@ function pageTitle(router: Router): string {
       }
     }
     @media (max-width: 720px) {
+      .nb-topbar__title {
+        flex-shrink: 1;
+      }
       .nb-search {
         width: 2.5rem;
         padding: 0;
@@ -346,7 +427,16 @@ function pageTitle(router: Router): string {
         display: none;
       }
     }
+    // Phones: the theme toggle is also in Settings and the palette, so it makes room for the
+    // page title next to the icon-only actions.
     @media (max-width: 480px) {
+      :host,
+      .nb-topbar__actions {
+        gap: 0.375rem;
+      }
+      .nb-topbar__theme {
+        display: none;
+      }
       .nb-live {
         width: 2.25rem;
         padding: 0;
@@ -365,6 +455,7 @@ export class Topbar {
   protected readonly live = inject(LiveOrdersService);
   protected readonly theme = inject(ThemeService);
   protected readonly palette = inject(CommandPaletteService);
+  protected readonly ai = inject(AiAssistantStore);
 
   protected readonly shortcut = /Mac|iPhone|iPad/.test(
     inject(DOCUMENT).defaultView?.navigator.userAgent ?? '',

@@ -2,7 +2,9 @@ import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { ApiConfigService } from '../../core/api/api-config.service';
 import { BackendSwitch } from '../../core/api/backend-switch';
+import { DemoOverlay } from '../../core/api/demo-overlay';
 import { AuthService } from '../../core/auth/auth.service';
 import { LiveOrdersService } from '../../core/live/live-orders.service';
 import { ToastService } from '../../core/notifications/toast.service';
@@ -18,7 +20,7 @@ const USER: User = {
   role: 'Admin',
 };
 
-async function setup() {
+async function setup(overlay?: { readOnly: () => boolean; changeCount: () => number }) {
   localStorage.clear();
   const live = { enabled: signal(true), count: signal(0) };
   TestBed.configureTestingModule({
@@ -27,8 +29,10 @@ async function setup() {
       provideHttpClientTesting(),
       { provide: AuthService, useValue: { user: signal(USER) } },
       { provide: LiveOrdersService, useValue: live },
+      ...(overlay ? [{ provide: DemoOverlay, useValue: { ...overlay, clear: vi.fn() } }] : []),
     ],
   });
+  if (overlay) TestBed.inject(ApiConfigService).setMode('live');
   const fixture = TestBed.createComponent(Settings);
   await fixture.whenStable();
   const el = fixture.nativeElement as HTMLElement;
@@ -102,6 +106,20 @@ describe('Settings', () => {
     req.flush(null, { status: 204, statusText: 'No Content' });
     await fixture.whenStable();
     expect(success).toHaveBeenCalledWith('Demo data reset');
+  });
+
+  it('explains a read-only live backend and discards the kept changes', async () => {
+    const { el, button } = await setup({ readOnly: () => true, changeCount: () => 2 });
+    expect(el.textContent).toContain('kept only in this browser tab');
+    expect(el.textContent).toContain('2 changes kept.');
+    button('Discard my changes').click();
+    expect(TestBed.inject(DemoOverlay).clear).toHaveBeenCalledTimes(1);
+    localStorage.clear();
+  });
+
+  it('has no read-only notice in mock mode', async () => {
+    const { el } = await setup();
+    expect(el.textContent).not.toContain('Read-only live demo');
   });
 
   it('does nothing when the reset is not confirmed', async () => {

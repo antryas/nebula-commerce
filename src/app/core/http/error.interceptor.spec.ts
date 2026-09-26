@@ -48,6 +48,31 @@ describe('toApiError', () => {
     expect(toApiError(new Error('boom'))).toMatchObject({ code: 'unknown' });
   });
 
+  it('maps a 429 to a rate-limit message', () => {
+    expect(toApiError(new HttpErrorResponse({ status: 429, error: null }))).toEqual({
+      status: 429,
+      code: 'rate_limited',
+      message: 'Too many requests. Please wait a moment and try again.',
+    });
+  });
+
+  it('reads ASP.NET Core problem details', () => {
+    const e = new HttpErrorResponse({
+      status: 400,
+      error: {
+        title: 'One or more validation errors occurred.',
+        status: 400,
+        errors: { Question: ['Required'] },
+      },
+    });
+    expect(toApiError(e)).toEqual({
+      status: 400,
+      code: 'validation',
+      message: 'One or more validation errors occurred.',
+      details: { Question: ['Required'] },
+    });
+  });
+
   it('passes an existing ApiError through', () => {
     const err = { status: 422, code: 'validation', message: 'Bad', details: { name: 'x' } };
     expect(toApiError(err)).toEqual(err);

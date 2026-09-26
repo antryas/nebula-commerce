@@ -39,6 +39,21 @@ backend by default, so the demo needs no server and no sign-up; one switch moves
   live card preview, unsaved-changes guard
 - Customer list and profile with lifetime value and order history
 
+**AI with cost control built in**
+
+- **Ask Nebula AI** panel (topbar button or "Ask AI" in the palette): a chat drawer with suggested
+  questions about top products, revenue, unshipped orders and best customers, answered from store
+  data. Shows which data tools an answer used and keeps the last 6 messages as context.
+- **Generate with AI** in the product editor: a description from name, category and tone
+  (friendly, premium, playful) that behaves like a normal edit (unsaved-changes guard included).
+- Two modes behind one `/api/ai` contract. The mock serves **recorded** answers templated from the
+  mock database, so the public demo never calls a model and costs nothing. The live .NET backend
+  answers with **DeepSeek**, capped by a daily per-user quota (shown as "12 of 20 left today") and
+  rate limiting; when the quota runs out it falls back to recorded answers and the panel says so.
+- Provider-agnostic: the UI only knows the contract (`answer`, `mode`, `toolsUsed`, `quota`), so the
+  model can change on the server without touching the frontend. Answers render through a small
+  markdown subset (paragraphs, bullets, bold) built from template nodes, never `innerHTML`.
+
 **UX details**
 
 - `Ctrl K` command palette: jump to pages, run actions, search orders, products and customers
@@ -63,7 +78,7 @@ backend by default, so the demo needs no server and no sign-up; one switch moves
 ```
 src/app/
   core/          app-wide services: typed API clients, auth, HTTP error handling,
-                 theme, toasts, live orders, command palette, layout shell
+                 theme, toasts, live orders, command palette, AI assistant, layout shell
   shared/        UI kit (cards, KPI, charts theme, skeletons, states), directives, pipes
   features/      one lazy-loaded folder per page: overview, orders, fulfillment,
                  products, customers, analytics, settings, login
@@ -105,6 +120,16 @@ an ASP.NET Core Web API (EF Core + SQLite) that implements this exact `/api` con
   page (demo credentials are pre-filled). A `401` from the live API does the same.
 - While live, the app pings `/health` every 30 s. If the live API is unreachable at startup, the
   app falls back to mock data and says so.
+- **The public live demo is read-only.** The server still validates every write and answers with
+  the resulting entity, but saves nothing (those responses carry `X-Nebula-Dry-Run: true`, and
+  `GET /api/demo/mode` reports `{ "readOnly": true }`). `demoOverlayInterceptor` keeps these
+  results in `sessionStorage` and lays them over list and detail reads, so product edits, new and
+  deleted products, order status changes and bulk updates stick in your tab while other visitors
+  always see the same data. Totals, KPIs and analytics stay as the server reports them. The
+  changes are dropped on sign-out, on switching backend, or with **Settings → Discard my
+  changes**.
+- If the live API has no working `/api/ai` endpoints (an older deployment answers `404`, or it
+  fails with `5xx`), the AI features fall back to the in-browser recorded answers.
 
 Run both locally:
 

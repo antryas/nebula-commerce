@@ -3,6 +3,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { ApiConfigService } from '../api/api-config.service';
 import { BackendStatus, BackendStatusService } from '../api/backend-status.service';
 import { BackendSwitch } from '../api/backend-switch';
+import { DemoOverlay } from '../api/demo-overlay';
 
 /** Short texts for one backend status, shared by the topbar pill and the Settings card. */
 export interface BackendStatusText {
@@ -73,6 +74,12 @@ export function backendStatusText(
           <span class="nb-backend__dot" aria-hidden="true"></span>
           {{ text().detail }}
         </p>
+        @if (readOnly()) {
+          <p class="nb-backend-menu__note">
+            Live demo is read-only: your changes are validated by the server and kept only in this
+            browser tab.
+          </p>
+        }
       </div>
 
       <button
@@ -222,6 +229,13 @@ export function backendStatusText(
       text-transform: uppercase;
       color: var(--nb-muted);
     }
+    .nb-backend-menu__note {
+      max-width: 17rem;
+      margin: 0.375rem 0 0;
+      font-size: 0.75rem;
+      line-height: 1.45;
+      color: var(--nb-muted);
+    }
     .nb-backend-menu__status {
       display: flex;
       align-items: center;
@@ -301,8 +315,10 @@ export class BackendIndicator {
   private readonly config = inject(ApiConfigService);
   private readonly switcher = inject(BackendSwitch);
   protected readonly status = inject(BackendStatusService);
+  private readonly overlay = inject(DemoOverlay);
 
   protected readonly isLive = computed(() => this.config.mode() === 'live');
+  protected readonly readOnly = computed(() => this.isLive() && this.overlay.readOnly());
   protected readonly text = computed(() =>
     backendStatusText(this.status.status(), this.status.latencyMs()),
   );

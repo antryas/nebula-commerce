@@ -14,6 +14,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs';
 import { provideCharts } from '../../shared/charts/provide-charts';
+import { AiAssistantPanel } from '../ai/ai-assistant-panel';
+import { AiAssistantStore } from '../ai/ai-assistant.store';
 import { CommandPaletteService } from '../command-palette/command-palette.service';
 import { LiveOrdersService } from '../live/live-orders.service';
 import { Sidebar } from './sidebar';
@@ -24,7 +26,7 @@ const SIDEBAR_KEY = 'nebula.sidebar';
 /** Authenticated layout: sidebar + topbar around the routed page. Owns the live order feed. */
 @Component({
   selector: 'nb-shell',
-  imports: [RouterOutlet, Sidebar, Topbar],
+  imports: [AiAssistantPanel, RouterOutlet, Sidebar, Topbar],
   // Chart config lives here rather than in app.config.ts to keep ngx-echarts lazy.
   providers: [provideCharts()],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -56,6 +58,10 @@ const SIDEBAR_KEY = 'nebula.sidebar';
         <router-outlet />
       </main>
     </div>
+    <!-- The assistant panel (and its styles) load on first open. -->
+    @defer (when ai.activated()) {
+      <nb-ai-assistant-panel />
+    }
   `,
   styles: `
     :host {
@@ -129,6 +135,7 @@ const SIDEBAR_KEY = 'nebula.sidebar';
 })
 export class Shell {
   private readonly live = inject(LiveOrdersService);
+  protected readonly ai = inject(AiAssistantStore);
   private readonly main = viewChild.required<ElementRef<HTMLElement>>('main');
 
   protected readonly collapsed = signal(readCollapsed());
@@ -137,7 +144,11 @@ export class Shell {
   constructor() {
     this.live.start();
     const destroyRef = inject(DestroyRef);
-    destroyRef.onDestroy(() => this.live.stop());
+    destroyRef.onDestroy(() => {
+      this.live.stop();
+      // Signing out tears the shell down; the next session starts with the panel closed.
+      this.ai.close();
+    });
 
     const win = inject(DOCUMENT).defaultView;
     // Fetch the command palette chunk once the first page has rendered and the browser is

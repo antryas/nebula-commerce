@@ -100,7 +100,8 @@ function withRange(
 // ---------------------------------------------------------------------------------------------
 // Endpoints
 
-function overview(range: RevenueRange): Kpi[] {
+/** KPI cards for a range; also quoted by the recorded AI answers. */
+export function overview(range: RevenueRange): Kpi[] {
   const { edges, previousStart } = period(range);
   const start = edges[0];
   const current = paidOrdersSince(start);
@@ -216,7 +217,8 @@ function funnel(range: RevenueRange): FunnelStep[] {
   ];
 }
 
-function topProducts(
+/** Best sellers by revenue; also quoted by the recorded AI answers. */
+export function topProducts(
   range: RevenueRange,
   limit: number,
 ): { product: Product; unitsSold: number; revenue: number }[] {

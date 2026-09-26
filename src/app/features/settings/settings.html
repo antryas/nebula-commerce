@@ -230,6 +230,49 @@
         <span class="material-symbols-rounded" aria-hidden="true">open_in_new</span>
       </a>
     </div>
+
+    @if (isReadOnlyLive()) {
+      <div class="nb-row">
+        <div class="min-w-0">
+          <p class="m-0 text-sm font-semibold text-nb-text" id="nb-readonly-label">
+            Read-only live demo
+          </p>
+          <p class="mt-0.5 mb-0 text-[0.8125rem] text-nb-muted" id="nb-readonly-hint">
+            Live demo is read-only: your changes are validated by the server and kept only in this
+            browser tab.
+            @if (overlay.changeCount(); as count) {
+              {{ count }} {{ count === 1 ? 'change' : 'changes' }} kept.
+            }
+          </p>
+        </div>
+        @if (overlay.changeCount()) {
+          <button
+            type="button"
+            class="nb-btn"
+            aria-describedby="nb-readonly-hint"
+            (click)="discardChanges()"
+          >
+            <span class="material-symbols-rounded" aria-hidden="true">undo</span>
+            Discard my changes
+          </button>
+        }
+      </div>
+    }
+
+    <div class="nb-row">
+      <div class="min-w-0">
+        <p class="m-0 text-sm font-semibold text-nb-text">AI assistant</p>
+        <p class="mt-0.5 mb-0 text-[0.8125rem] text-nb-muted">
+          @if (isLiveBackend()) {
+            Live DeepSeek answers through the .NET backend, capped by a daily per-user quota;
+            recorded answers take over once it runs out.
+          } @else {
+            Recorded demo: answers are built from the mock store data, with no model calls and no
+            cost.
+          }
+        </p>
+      </div>
+    </div>
   </nb-glass-card>
 
   <!-- About -->

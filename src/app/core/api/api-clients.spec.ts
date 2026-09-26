@@ -3,6 +3,8 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { Observable, firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { SKIP_ERROR_TOAST } from '../http/error.interceptor';
+import { AiApi } from './ai-api';
 import { AnalyticsApi } from './analytics-api';
 import { ApiConfigService, BACKEND_STORAGE_KEY } from './api-config.service';
 import { DemoApi } from './demo-api';
@@ -94,6 +96,26 @@ describe('API clients', () => {
     ctrl.expectOne('/api/analytics/top-products?range=30d&limit=5').flush([]);
     api.topProducts('12m', 3).subscribe();
     ctrl.expectOne('/api/analytics/top-products?range=12m&limit=3').flush([]);
+  });
+
+  it('AiApi covers status, ask and product descriptions', () => {
+    const api = TestBed.inject(AiApi);
+    api.status().subscribe();
+    ctrl.expectOne({ method: 'GET', url: '/api/ai/status' }).flush({});
+
+    const question = { question: 'Hi?', history: [{ role: 'user' as const, content: 'Hello' }] };
+    api.ask(question, { silent: true }).subscribe();
+    const ask = ctrl.expectOne({ method: 'POST', url: '/api/ai/ask' });
+    expect(ask.request.body).toEqual(question);
+    expect(ask.request.context.get(SKIP_ERROR_TOAST)).toBe(true);
+    ask.flush({});
+
+    const product = { name: 'Tee', category: 'Apparel' as const, tone: 'premium' as const };
+    api.productDescription(product).subscribe();
+    const post = ctrl.expectOne({ method: 'POST', url: '/api/ai/product-description' });
+    expect(post.request.body).toEqual(product);
+    expect(post.request.context.get(SKIP_ERROR_TOAST)).toBe(false);
+    post.flush({});
   });
 
   it('resolve the base URL per request, so switching backends needs no reload', () => {

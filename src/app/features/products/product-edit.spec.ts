@@ -90,4 +90,41 @@ describe('ProductEdit', () => {
     },
     SLOW,
   );
+
+  it(
+    'generates a description with AI and keeps the unsaved-changes guard armed',
+    async () => {
+      const fixture = setup();
+      await fixture.whenStable();
+      const el = fixture.nativeElement as HTMLElement;
+      const generate = () =>
+        [...el.querySelectorAll<HTMLButtonElement>('button')].find((b) =>
+          b.textContent?.includes('Generate with AI'),
+        );
+      expect(generate()?.disabled).toBe(true);
+
+      type(el.querySelector<HTMLInputElement>('#product-name')!, 'Aurora Hoodie');
+      const category = el.querySelector<HTMLSelectElement>('#product-category')!;
+      category.value = 'Apparel';
+      category.dispatchEvent(new Event('change'));
+      const tone = el.querySelector<HTMLSelectElement>('[aria-label="Description tone"]')!;
+      tone.value = 'playful';
+      tone.dispatchEvent(new Event('change'));
+      await fixture.whenStable();
+      expect(generate()?.disabled).toBe(false);
+      generate()!.click();
+      fixture.detectChanges();
+      expect(el.textContent).toContain('Generating…');
+
+      const description = el.querySelector<HTMLTextAreaElement>('#product-description')!;
+      await vi.waitFor(async () => {
+        await fixture.whenStable();
+        expect(description.value).toContain('Say hello to the Aurora Hoodie!');
+      }, WAIT);
+      expect(el.querySelector('.nb-ai-gen__badge')?.textContent?.trim()).toBe('Recorded');
+      expect(generate()?.disabled).toBe(false);
+      expect(fixture.componentInstance.hasUnsavedChanges()).toBe(true);
+    },
+    SLOW,
+  );
 });

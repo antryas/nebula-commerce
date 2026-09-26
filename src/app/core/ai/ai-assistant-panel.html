@@ -1,0 +1,157 @@
+@if (store.isOpen()) {
+  <div
+    class="nb-ai-scrim"
+    aria-hidden="true"
+    animate.enter="nb-ai-fade-in"
+    animate.leave="nb-ai-fade-out"
+    (click)="store.close()"
+  ></div>
+
+  <aside
+    class="nb-ai"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="nb-ai-title"
+    cdkTrapFocus
+    [cdkTrapFocusAutoCapture]="true"
+    animate.enter="nb-ai-in"
+    animate.leave="nb-ai-out"
+    (keydown.escape)="store.close()"
+  >
+    <header class="nb-ai__head">
+      <span class="nb-ai__mark material-symbols-rounded" aria-hidden="true">auto_awesome</span>
+      <div class="nb-ai__heading">
+        <h2 id="nb-ai-title">Ask Nebula AI</h2>
+        <p class="nb-ai__meta">
+          <span class="nb-ai__badge" [attr.data-mode]="store.isLive() ? 'live' : 'recorded'">
+            <span class="nb-ai__badge-dot" aria-hidden="true"></span>
+            {{ store.badge() }}
+          </span>
+          @if (store.quotaText(); as quota) {
+            <span class="nb-ai__quota">{{ quota }}</span>
+          }
+        </p>
+      </div>
+      <button
+        type="button"
+        class="nb-icon-btn"
+        aria-label="Clear chat"
+        title="Clear chat"
+        [disabled]="!store.messages().length && !store.pending()"
+        (click)="store.clear()"
+      >
+        <span class="material-symbols-rounded" aria-hidden="true">delete_sweep</span>
+      </button>
+      <button
+        type="button"
+        class="nb-icon-btn"
+        aria-label="Close assistant"
+        title="Close"
+        (click)="store.close()"
+      >
+        <span class="material-symbols-rounded" aria-hidden="true">close</span>
+      </button>
+    </header>
+
+    <div #thread class="nb-ai__thread" role="log" aria-live="polite" aria-label="Conversation">
+      @for (m of store.messages(); track m.id) {
+        <div
+          class="nb-ai__msg"
+          [class.nb-ai__msg--user]="m.role === 'user'"
+          [class.nb-ai__msg--error]="m.error"
+          animate.enter="nb-ai-msg-in"
+        >
+          <div class="nb-ai__bubble">
+            <span class="sr-only">{{ m.role === 'user' ? 'You' : 'Nebula AI' }}:</span>
+            @if (m.role === 'assistant' && !m.error) {
+              <nb-markdown-lite [text]="m.content" />
+            } @else {
+              <span class="nb-ai__text">{{ m.content }}</span>
+            }
+          </div>
+          @if (m.toolsUsed?.length) {
+            <p class="nb-ai__tools">
+              <span class="material-symbols-rounded" aria-hidden="true">database</span>
+              Used: {{ tools(m) }}
+            </p>
+          }
+        </div>
+      } @empty {
+        <div class="nb-ai__intro">
+          <p class="nb-ai__intro-title">What would you like to know?</p>
+          <p class="nb-ai__intro-text">
+            Answers are built from your store's orders, products and customers.
+          </p>
+        </div>
+        <div class="nb-ai__suggestions" role="list" aria-label="Suggested questions">
+          @for (q of suggestions; track q) {
+            <div role="listitem">
+              <button type="button" class="nb-ai__chip nb-ai__chip--block" (click)="ask(q)">
+                <span class="material-symbols-rounded" aria-hidden="true">north_east</span>
+                {{ q }}
+              </button>
+            </div>
+          }
+        </div>
+      }
+
+      @if (store.pending()) {
+        <div class="nb-ai__msg">
+          <div class="nb-ai__bubble nb-ai__typing">
+            <span class="sr-only">Nebula AI is typing</span>
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+          </div>
+        </div>
+      }
+    </div>
+
+    @if (store.limitReached()) {
+      <p class="nb-ai__note">
+        <span class="material-symbols-rounded" aria-hidden="true">info</span>
+        Daily live AI limit reached — showing recorded answers
+      </p>
+    }
+
+    @if (store.messages().length) {
+      <div class="nb-ai__chips" role="list" aria-label="Suggested questions">
+        @for (q of suggestions; track q) {
+          <div role="listitem">
+            <button type="button" class="nb-ai__chip" [disabled]="store.pending()" (click)="ask(q)">
+              {{ q }}
+            </button>
+          </div>
+        }
+      </div>
+    }
+
+    <form class="nb-ai__composer" (submit)="$event.preventDefault(); send()">
+      <textarea
+        #input
+        cdkFocusInitial
+        rows="2"
+        aria-label="Ask a question"
+        placeholder="Ask about sales, orders or customers…"
+        [attr.maxlength]="maxLength"
+        [value]="draft()"
+        [disabled]="store.pending()"
+        (input)="onInput($event)"
+        (keydown)="onKeydown($event)"
+      ></textarea>
+      <div class="nb-ai__composer-row">
+        <span class="nb-ai__hint">
+          <kbd class="nb-kbd">Enter</kbd> to send · {{ draft().length }}/{{ maxLength }}
+        </span>
+        <button
+          type="submit"
+          class="nb-ai__send"
+          aria-label="Send question"
+          [disabled]="!draft().trim() || store.pending()"
+        >
+          <span class="material-symbols-rounded" aria-hidden="true">arrow_upward</span>
+        </button>
+      </div>
+    </form>
+  </aside>
+}

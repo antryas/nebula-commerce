@@ -3,6 +3,7 @@ import { signal } from '@angular/core';
 import { ApiConfigService, BACKEND_STORAGE_KEY, BackendMode } from '../api/api-config.service';
 import { BackendStatus, BackendStatusService } from '../api/backend-status.service';
 import { BackendSwitch } from '../api/backend-switch';
+import { DemoOverlay } from '../api/demo-overlay';
 import { BackendIndicator, backendStatusText } from './backend-indicator';
 
 async function setup(initial: BackendStatus = 'mock', latency: number | null = null) {
@@ -10,10 +11,12 @@ async function setup(initial: BackendStatus = 'mock', latency: number | null = n
   const latencyMs = signal<number | null>(latency);
   const mode = signal<BackendMode>(initial === 'mock' ? 'mock' : 'live');
   const switcher = { switchTo: vi.fn() };
+  const readOnly = signal(false);
   TestBed.configureTestingModule({
     providers: [
       { provide: BackendStatusService, useValue: { status, latencyMs } },
       { provide: BackendSwitch, useValue: switcher },
+      { provide: DemoOverlay, useValue: { readOnly } },
       {
         provide: ApiConfigService,
         useValue: { mode, liveOrigin: 'https://api.example.test' },
@@ -29,7 +32,7 @@ async function setup(initial: BackendStatus = 'mock', latency: number | null = n
     pill.click();
     await fixture.whenStable();
   };
-  return { fixture, el, pill, label, status, latencyMs, mode, switcher, openMenu };
+  return { fixture, el, pill, label, status, latencyMs, mode, switcher, readOnly, openMenu };
 }
 
 describe('backendStatusText', () => {
@@ -96,6 +99,21 @@ describe('BackendIndicator', () => {
     await openMenu();
     document.querySelector<HTMLElement>('[role="menuitemcheckbox"]')!.click();
     expect(switcher.switchTo).toHaveBeenCalledWith('live');
+  });
+
+  it('explains a read-only live backend in the menu', async () => {
+    const { openMenu, readOnly } = await setup('online', 20);
+    readOnly.set(true);
+    await openMenu();
+    expect(document.querySelector('.nb-backend-menu__note')?.textContent).toContain(
+      'kept only in this browser tab',
+    );
+  });
+
+  it('has no read-only note for a writable backend', async () => {
+    const { openMenu } = await setup('online', 20);
+    await openMenu();
+    expect(document.querySelector('.nb-backend-menu__note')).toBeNull();
   });
 
   it('switches back to mock from live mode', async () => {

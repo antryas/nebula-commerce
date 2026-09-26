@@ -1,3 +1,4 @@
+import { registerAiRoutes } from './handlers/ai';
 import { registerAnalyticsRoutes } from './handlers/analytics';
 import { registerAuthRoutes } from './handlers/auth';
 import { registerCustomerRoutes } from './handlers/customers';
@@ -19,6 +20,7 @@ registerCustomerRoutes(mockRouter);
 registerAnalyticsRoutes(mockRouter);
 registerLiveRoutes(mockRouter);
 registerDemoRoutes(mockRouter);
+registerAiRoutes(mockRouter);
 
 /** Routes a request to its handler. Request and response bodies are deep-copied. */
 export function handleMockRequest(req: Omit<MockRequest, 'params'>): MockResponse {

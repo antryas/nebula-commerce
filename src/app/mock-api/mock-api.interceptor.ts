@@ -56,7 +56,11 @@ export const mockApiInterceptor: HttpInterceptorFn = (req, next) => {
   );
 };
 
-function toHttpEvent(req: HttpRequest<unknown>, res: MockResponse): Observable<HttpEvent<unknown>> {
+/** Turns a mock response into the event (or error) `HttpClient` would get from a server. */
+export function toHttpEvent(
+  req: HttpRequest<unknown>,
+  res: MockResponse,
+): Observable<HttpEvent<unknown>> {
   if (res.status >= 400) {
     return throwError(
       () =>

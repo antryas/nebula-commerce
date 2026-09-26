@@ -13,6 +13,7 @@ import { ApiConfigService } from '../../core/api/api-config.service';
 import { BackendStatusService } from '../../core/api/backend-status.service';
 import { BackendSwitch } from '../../core/api/backend-switch';
 import { DemoApi } from '../../core/api/demo-api';
+import { DemoOverlay } from '../../core/api/demo-overlay';
 import { APP_NAME, APP_VERSION, REPO_URL } from '../../core/app-info';
 import { AuthService } from '../../core/auth/auth.service';
 import { backendStatusText } from '../../core/layout/backend-indicator';
@@ -65,6 +66,7 @@ export class Settings {
   private readonly apiConfig = inject(ApiConfigService);
   private readonly backendSwitch = inject(BackendSwitch);
   protected readonly backend = inject(BackendStatusService);
+  protected readonly overlay = inject(DemoOverlay);
 
   protected readonly accents = ACCENT_PRESETS;
   protected readonly modes = MODES;
@@ -94,6 +96,10 @@ export class Settings {
   protected readonly isLiveBackend = computed(() => this.apiConfig.mode() === 'live');
   protected readonly backendText = computed(() =>
     backendStatusText(this.backend.status(), this.backend.latencyMs()),
+  );
+  /** A read-only live backend: the visitor's changes live only in this tab. */
+  protected readonly isReadOnlyLive = computed(
+    () => this.isLiveBackend() && this.overlay.readOnly(),
   );
   protected readonly apiDocsUrl = `${this.apiConfig.liveOrigin}/swagger`;
 
@@ -125,6 +131,11 @@ export class Settings {
 
   protected toggleBackend(): void {
     this.backendSwitch.switchTo(this.isLiveBackend() ? 'mock' : 'live');
+  }
+
+  protected discardChanges(): void {
+    this.overlay.clear();
+    this.toasts.success('Changes discarded', 'Showing the live backend data again.');
   }
 
   protected resetDemo(): void {
