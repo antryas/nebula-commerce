@@ -82,7 +82,7 @@ function pageTitle(router: Router): string {
         (click)="toggleLive()"
       >
         <span class="nb-live__dot" aria-hidden="true"></span>
-        <span class="nb-live__label">{{ live.enabled() ? 'Live' : 'Paused' }}</span>
+        <span class="nb-live__label">{{ live.enabled() ? 'Live orders' : 'Paused' }}</span>
         @if (live.count() > 0) {
           <span class="nb-live__count" aria-hidden="true">{{ live.count() }}</span>
         }
