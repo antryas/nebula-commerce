@@ -3,7 +3,8 @@ import { Browser, BrowserContextOptions, Page, expect, test } from '@playwright/
 /**
  * Captures the portfolio screenshots into `portfolio/screenshots/`.
  * Run with `npm run screenshots`. Data is deterministic: `?screenshot=1` disables mock
- * latency and random failures; the clock is pinned to the demo's "now".
+ * latency and random failures; the clock is pinned to the demo's "now". The AI shots are
+ * the exception: they use the live .NET backend and a real model (see `openLivePage`).
  */
 
 /**
@@ -33,6 +34,8 @@ interface ShotOptions {
   signedIn?: boolean;
   viewport?: { width: number; height: number };
   mobile?: boolean;
+  /** Device scale factor for desktop viewports (mobile is always 2). */
+  scale?: number;
 }
 
 /** Hides the toast stack and the text caret so nothing transient ends up in a capture. */
@@ -128,12 +131,29 @@ async function hideEmails(page: Page): Promise<void> {
     const email = /[\w.+-]+@[\w-]+\.[\w.]+/;
     const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
     for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-      if (email.test(node.textContent ?? '')) node.parentElement?.style.setProperty('visibility', 'hidden');
+      if (email.test(node.textContent ?? '')) {
+        node.parentElement?.style.setProperty('visibility', 'hidden');
+        node.parentElement?.setAttribute('data-nb-email-hidden', '');
+      }
     }
     document.querySelectorAll<HTMLInputElement>('input, textarea').forEach((el) => {
-      if (email.test(el.value)) el.style.setProperty('color', 'transparent');
+      if (email.test(el.value)) {
+        el.style.setProperty('color', 'transparent');
+        el.setAttribute('data-nb-email-hidden', '');
+      }
     });
   });
+}
+
+/** Undoes `hideEmails`. */
+async function showEmails(page: Page): Promise<void> {
+  await page.evaluate(() =>
+    document.querySelectorAll<HTMLElement>('[data-nb-email-hidden]').forEach((el) => {
+      el.style.removeProperty('visibility');
+      el.style.removeProperty('color');
+      el.removeAttribute('data-nb-email-hidden');
+    }),
+  );
 }
 
 async function shoot(page: Page, name: string, fullPage = false): Promise<void> {
@@ -268,58 +288,179 @@ test('12 + 13 mobile overview and orders (dark)', async ({ browser }) => {
 });
 
 /**
- * Opens "Ask Nebula AI" from the topbar, asks a suggested question and waits until the
- * recorded answer (templated from mock data, deterministic) has fully rendered.
+ * The AI shots run against the live .NET backend (real model answers, not templates).
+ * `ng serve` points the live mode at `localhost:5080`; those requests are proxied to the
+ * public API, with CORS headers added for this origin. Each run spends 3 live AI calls of
+ * the demo's small daily quota, so they write both folders at once and skip `NO_EMAILS`.
  */
-async function askAi(page: Page, question: string): Promise<void> {
+const LIVE_DEV_ORIGIN = 'http://localhost:5080';
+const LIVE_ORIGIN = 'https://api.antrias.site';
+const LIVE_TIMEOUT = 120_000;
+
+/** Hides chrome that only distracts in an AI close-up: the suggested-question strip. */
+const AI_CAPTURE_CSS = `.nb-ai__chips { display: none !important; }`;
+
+const AI_QUESTION = 'Which category earned the most this month, and what are its top products?';
+const AI_QUESTION_MOBILE = 'How did revenue change this month, and which 3 products sold best?';
+const AI_PRODUCT = 'Action Camera';
+const AI_TONE = 'premium';
+
+interface Clip {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+async function openLivePage(browser: Browser, opts: ShotOptions = {}): Promise<Page> {
+  const { mode = 'dark', viewport = { width: 1440, height: 900 } } = opts;
+  const context = await browser.newContext({
+    viewport,
+    deviceScaleFactor: opts.mobile ? 2 : (opts.scale ?? 1),
+    isMobile: !!opts.mobile,
+    hasTouch: !!opts.mobile,
+    colorScheme: mode,
+    reducedMotion: 'reduce',
+    timezoneId: 'UTC',
+    locale: 'en-US',
+  });
+  const origin = new URL(test.info().project.use.baseURL ?? 'http://localhost:4300').origin;
+  const cors = {
+    'access-control-allow-origin': origin,
+    'access-control-allow-headers': 'authorization, content-type',
+    'access-control-allow-methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+  };
+  await context.route(`${LIVE_DEV_ORIGIN}/**`, async (route) => {
+    const request = route.request();
+    if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: cors });
+    const headers = { ...request.headers() };
+    delete headers['origin'];
+    const response = await route.fetch({
+      url: request.url().replace(LIVE_DEV_ORIGIN, LIVE_ORIGIN),
+      headers,
+      timeout: LIVE_TIMEOUT,
+    });
+    await route.fulfill({ response, headers: { ...response.headers(), ...cors } });
+  });
+  const page = await context.newPage();
+  // No pinned clock here: the live API issues and checks real JWT timestamps.
+  await page.addInitScript((mode) => {
+    localStorage.setItem('nebula.theme', JSON.stringify({ mode, accent: 'violet' }));
+    localStorage.setItem('nebula.backend', 'live');
+  }, mode);
+
+  // Sign in with the demo account the login form is prefilled with.
+  await page.goto('/login?screenshot=1');
+  await page.locator('button.nb-submit').click();
+  await expect(page).toHaveURL(/\/overview/, { timeout: 30_000 });
+  await settle(page);
+  await expect(page.locator('.nb-backend')).toHaveAttribute('data-status', 'online');
+  return page;
+}
+
+/**
+ * Opens "Ask Nebula AI", types `question` into the composer and waits for the model's
+ * answer to render. The answer varies from run to run, so only the live badge and the
+ * tools line are asserted; the text is logged for review.
+ */
+async function askLiveAi(page: Page, question: string): Promise<void> {
   await page.locator('button.nb-ask-ai').evaluate((el: HTMLElement) => el.click());
   const panel = page.getByRole('dialog', { name: 'Ask Nebula AI' });
   await expect(panel).toBeVisible();
-  await panel.getByRole('button', { name: question }).click();
-  await expect(panel.locator('.nb-ai__typing')).toHaveCount(0);
-  await expect(panel.locator('nb-markdown-lite li').first()).toBeVisible();
-  await expect(panel.locator('.nb-ai__tools')).toBeVisible();
+  await expect(panel.locator('.nb-ai__badge')).toHaveAttribute('data-mode', 'live');
+  await panel.getByRole('textbox', { name: 'Ask a question' }).fill(question);
+  await panel.getByRole('button', { name: 'Send question' }).click();
+  await expect(panel.locator('.nb-ai__msg--user')).toHaveCount(1);
+  await expect(panel.locator('.nb-ai__typing')).toHaveCount(0, { timeout: LIVE_TIMEOUT });
+  const answer = panel.locator('.nb-ai__msg:not(.nb-ai__msg--user)').last();
+  await expect(answer.locator('nb-markdown-lite')).toBeVisible();
+  const quota = panel.locator('.nb-ai__quota');
+  console.log(
+    `[AI] badge: ${await panel.locator('.nb-ai__badge').innerText()}\n` +
+      `[AI] quota: ${(await quota.count()) ? await quota.innerText() : '-'}\n` +
+      `[AI] Q: ${question}\n[AI] A: ${await answer.innerText()}`,
+  );
+  await expect(answer.locator('.nb-ai__tools')).toBeVisible();
+  await page.addStyleTag({ content: AI_CAPTURE_CSS });
   await page.waitForLoadState('networkidle');
-  // Let the message entrance and the thread's scroll-to-bottom finish.
   await page.waitForTimeout(800);
+  // Start the thread at the question, so both the question and the answer are in view.
+  await panel.locator('.nb-ai__thread').evaluate((thread) => {
+    const first = thread.querySelector<HTMLElement>('.nb-ai__msg');
+    if (first) thread.scrollTop = first.offsetTop - 16;
+  });
+  await page.waitForTimeout(300);
 }
 
-const AI_QUESTION = 'What were my top 5 products this month?';
+/** Writes the capture to both folders: as is, then with e-mail addresses blanked. */
+async function shootBoth(page: Page, name: string, clip?: Clip): Promise<void> {
+  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur?.());
+  await page.mouse.move(0, 0);
+  const options = { animations: 'disabled', caret: 'hide', clip } as const;
+  await page.screenshot({ ...options, path: `portfolio/screenshots/${name}.png` });
+  await hideEmails(page);
+  await page.screenshot({ ...options, path: `portfolio/catalog/${name}.png` });
+  await showEmails(page);
+}
 
-test('14 AI assistant (dark + light)', async ({ browser }) => {
-  for (const mode of ['dark', 'light'] as const) {
-    const page = await openPage(browser, { mode });
-    await go(page, '/overview');
-    await askAi(page, AI_QUESTION);
-    await shoot(page, `14-ai-assistant-${mode}`);
+/** The AI panel plus `context` px of the dimmed page to its left, full viewport height. */
+async function panelClip(page: Page, context: number): Promise<Clip> {
+  const box = await page.getByRole('dialog', { name: 'Ask Nebula AI' }).boundingBox();
+  const viewport = page.viewportSize()!;
+  const x = Math.max(0, Math.floor(box!.x - context));
+  return { x, y: 0, width: viewport.width - x, height: viewport.height };
+}
+
+test.describe('AI (live backend)', () => {
+  test.skip(NO_EMAILS, 'The live AI shots write both folders in the normal run.');
+
+  test('14 AI assistant (dark + light)', async ({ browser }) => {
+    test.setTimeout(240_000);
+    const page = await openLivePage(browser, { viewport: { width: 1280, height: 900 }, scale: 2 });
+    await askLiveAi(page, AI_QUESTION);
+    await shootBoth(page, '14-ai-assistant-dark', await panelClip(page, 12));
+    // Same answer in the light theme: flip the theme instead of asking again.
+    await page.locator('.nb-topbar__theme').evaluate((el: HTMLElement) => el.click());
+    await page.waitForTimeout(800);
+    await shootBoth(page, '14-ai-assistant-light', await panelClip(page, 12));
     await page.context().close();
-  }
-});
+  });
 
-test('15 AI product description (dark)', async ({ browser }) => {
-  const page = await openPage(browser);
-  await go(page, '/products');
-  await page.getByPlaceholder('Search by name or SKU').fill('Action Camera');
-  await page.waitForLoadState('networkidle');
-  await page.locator('a[href*="/edit"]').filter({ hasText: 'Action Camera' }).first().click();
-  await expect(page).toHaveURL(/\/products\/[^/]+\/edit/);
-  await settle(page);
+  test('15 AI product description (dark)', async ({ browser }) => {
+    test.setTimeout(240_000);
+    const page = await openLivePage(browser);
+    await page.goto('/products?screenshot=1');
+    await settle(page);
+    await page.getByPlaceholder('Search by name or SKU').fill(AI_PRODUCT);
+    await page.waitForLoadState('networkidle');
+    await page.locator('a[href*="/edit"]').filter({ hasText: AI_PRODUCT }).first().click();
+    await expect(page).toHaveURL(/\/products\/[^/]+\/edit/);
+    await settle(page);
 
-  await page.getByLabel('Description tone').selectOption('premium');
-  await page.getByRole('button', { name: 'Generate with AI' }).click();
-  const description = page.locator('#product-description');
-  await expect(description).toHaveValue(/quiet luxury/);
-  await expect(page.locator('.nb-ai-gen__badge')).toBeVisible();
-  await page.locator('.nb-ai-gen').scrollIntoViewIfNeeded();
-  await page.waitForTimeout(500);
-  await shoot(page, '15-ai-product-description-dark');
-  await page.context().close();
-});
+    const description = page.locator('#product-description');
+    const before = await description.inputValue();
+    const generate = page.getByRole('button', { name: /Generate with AI|Generating/ });
+    await page.getByLabel('Description tone').selectOption(AI_TONE);
+    await generate.click();
+    await expect(generate).toHaveText(/Generate with AI/, { timeout: LIVE_TIMEOUT });
+    await expect(description).not.toHaveValue(before);
+    await expect(page.locator('.nb-ai-gen__badge')).toHaveText('Live AI');
+    console.log(`[AI] ${AI_PRODUCT} (${AI_TONE}): ${await description.inputValue()}`);
+    await page.locator('.nb-ai-gen').scrollIntoViewIfNeeded();
+    await goLive(page);
+    await page.waitForTimeout(500);
+    await shootBoth(page, '15-ai-product-description-dark');
+    await page.context().close();
+  });
 
-test('16 AI assistant mobile (dark)', async ({ browser }) => {
-  const page = await openPage(browser, { viewport: { width: 390, height: 844 }, mobile: true });
-  await go(page, '/overview');
-  await askAi(page, AI_QUESTION);
-  await shoot(page, '16-ai-assistant-mobile');
-  await page.context().close();
+  test('16 AI assistant mobile (dark)', async ({ browser }) => {
+    test.setTimeout(240_000);
+    const page = await openLivePage(browser, {
+      viewport: { width: 390, height: 844 },
+      mobile: true,
+    });
+    await askLiveAi(page, AI_QUESTION_MOBILE);
+    await shootBoth(page, '16-ai-assistant-mobile');
+    await page.context().close();
+  });
 });
